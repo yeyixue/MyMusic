@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 激活状态的菜单文字样式 -->
+    <style name="BottomNavTextActive" parent="TextAppearance.AppCompat.Caption">
+        <item name="android:textSize">20sp</item>
+        <item name="android:textColor">#FFFFFF</item> <!-- 可选 -->
+    </style>
+
+    <!-- 非激活状态的菜单文字样式 -->
+    <style name="BottomNavTextInactive" parent="TextAppearance.AppCompat.Caption">
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">#888888</item> <!-- 可选 -->
+    </style>
+
+</resources>

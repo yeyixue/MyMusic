@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#9DB4EB"
-    tools:context=".viewpage2.myMusic.view.fragment.MusicStyleFragment">
+    tools:context=".view.fragment.MusicStyleFragment">
 
     <!-- TODO: Update blank fragment layout -->
     <TextView

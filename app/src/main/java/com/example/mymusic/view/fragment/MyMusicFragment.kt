@@ -28,4 +28,7 @@ class MyMusicFragment : BaseMusicFragment() {
     override fun initData() {
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+    }
 }

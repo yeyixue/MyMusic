@@ -49,7 +49,7 @@ class MainMusicFragment : BaseMusicFragment() {
         // 设置点击事件监听
         mMusicRecycleViewAdapter.setOnItemClickListener(object : MusicRecycleViewAdapter.OnItemClickListener{
             override fun onItemClick(noteInfo: NoteInfo) {
-                Log.d("recycleview","  点击了$noteInfo  ")
+                Log.d("mMusicRecycleViewAdapter","  点击了$noteInfo  ")
             }
         })
 
@@ -152,5 +152,9 @@ class MainMusicFragment : BaseMusicFragment() {
     }
 
     override fun initData() {
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
     }
 }

@@ -1,14 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".viewpage2.myMusic.view.fragment.FindMusicFragment">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@color/black"
+    android:orientation="vertical"
+    tools:context=".view.fragment.FindMusicFragment">
 
     <!-- TODO: Update blank fragment layout -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginHorizontal="20dp"
+        app:cardCornerRadius="25dp"
+        app:cardElevation="2dp">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#282828"
+            android:paddingRight="10dp">
+
+            <EditText
+                android:id="@+id/et_search"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_alignParentLeft="true"
+                android:layout_toLeftOf="@id/btn_search"
+                android:background="#282828"
+                android:drawableLeft="@drawable/baseline_search_24"
+                android:hint="搜索歌手、歌曲或专辑名"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:textColorHint="#616161"
+
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/btn_search"
+                android:layout_width="60dp"
+                android:layout_height="match_parent"
+                android:layout_alignParentRight="true"
+                android:background="#282828"
+                android:gravity="center"
+                android:text="搜索"
+                android:textColor="#616161"
+                android:textSize="14sp" />
+        </RelativeLayout>
+    </androidx.cardview.widget.CardView>
     <TextView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="fragment_find_music.xml" />
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:gravity="left"
+        android:text="为你推荐，每天来点新模式"
+        android:textColor="#FFFFFF"
+        android:layout_marginLeft="15dp"
+        android:layout_marginTop="15dp"
+        android:layout_marginBottom="15dp"
+        android:textSize="18sp"/>
 
-</FrameLayout>
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycleViewFindMusic"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginHorizontal="20dp"
+        tools:listitem="@layout/item_main_music"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        android:contentDescription="发现页面"
+        android:layout_gravity="center"
+        >
+    </androidx.recyclerview.widget.RecyclerView>
+
+</LinearLayout>

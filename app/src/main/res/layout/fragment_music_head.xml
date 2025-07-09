@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context=".viewpage2.myMusic.view.fragment.MusicHeadFragment">
+    tools:context=".view.fragment.MusicHeadFragment">
 
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/viewPager2_fragment"
@@ -19,9 +19,12 @@
         android:layout_height="50dp"
         app:labelVisibilityMode="selected"
         app:menu="@menu/navigation"
+        app:itemTextAppearanceActive="@style/BottomNavTextActive"
+        app:itemTextAppearanceInactive="@style/BottomNavTextInactive"
+        android:background="@color/black"
         android:layout_alignParentBottom="true"
-        app:itemIconTint="#5659B8"
-        app:itemTextColor="#5659B8" />
+        app:itemIconTint="#FFFFFF"
+        app:itemTextColor="#FFFFFF" />
 
 
 </RelativeLayout>

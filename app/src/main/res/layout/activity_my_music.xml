@@ -5,7 +5,8 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".viewpage2.myMusic.view.activity.MyMusicActivity">
+    android:background="@color/black"
+    tools:context=".view.activity.MyMusicActivity">
 
     <!-- 顶部的 TabLayout -->
     <!-- 关键修复1：TabLayout 顶部对齐父布局顶部 -->
@@ -14,6 +15,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:tabMode="fixed"
+        android:background="@color/black"
+        app:tabTextColor="@color/white"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"/>

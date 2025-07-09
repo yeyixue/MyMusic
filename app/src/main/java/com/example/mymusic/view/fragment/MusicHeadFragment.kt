@@ -84,6 +84,8 @@ class MusicHeadFragment : BaseMusicFragment() {
         }
     }
 
-
+    override fun onDestroy() {
+        super.onDestroy()
+    }
 }
 
