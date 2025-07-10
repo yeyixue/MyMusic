@@ -1,0 +1,11 @@
+<!-- res/drawable/seekbar_thumb.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+
+    <size
+        android:width="12dp"
+        android:height="12dp" /> <!-- 固定大小、正圆 -->
+
+    <solid android:color="#FFFFFF" /> <!-- 纯白色滑块 -->
+
+</shape>

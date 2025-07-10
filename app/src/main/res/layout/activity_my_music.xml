@@ -13,7 +13,7 @@
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tabs"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="25dp"
         app:tabMode="fixed"
         android:background="@color/black"
         app:tabTextColor="@color/white"

@@ -71,6 +71,20 @@ dependencies {
     // TabLayout / 指示器CircleIndicator
     implementation("me.relex:circleindicator:2.1.6")
 
+    // okHttp
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
+    //ConverterFactory 的 String 依赖包
+    //拦截器 OkHttp库的Logging Interceptor模块。
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0") // 或最新版
+
+
+    // lottie
+    implementation("com.airbnb.android:lottie:6.0.0")
+
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)

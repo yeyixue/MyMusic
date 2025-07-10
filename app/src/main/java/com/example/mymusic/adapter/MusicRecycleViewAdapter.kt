@@ -102,7 +102,7 @@ class MusicRecycleViewAdapter(
                     // 处理 color 变化
                     payload["color"]?.let { color ->
                         val drawable = holder.itemView.context.getDrawable(color as Int)
-                        holder.imageView.background = drawable
+//                        holder.imageView.background = drawable
                     }
                 }
                 is MyHolderVideo -> {
@@ -147,7 +147,7 @@ class MusicRecycleViewAdapter(
      */
     inner class MyHolderMusic(itemView: View) : RecyclerView.ViewHolder(itemView) {
         // 缓存列表项中的TextView控件引用
-        val imageView: ImageView = itemView.findViewById(R.id.imageView)
+//        val imageView: ImageView = itemView.findViewById(R.id.imageView)
 
         /**
          * 将NoteInfo数据绑定到视图上
@@ -155,8 +155,8 @@ class MusicRecycleViewAdapter(
          */
         fun bind(info: NoteInfo) {
             // 通过 itemView 的上下文获取颜色对应的 Drawable
-            val drawable = itemView.context.getDrawable(info.color)
-            imageView.background = drawable
+//            val drawable = itemView.context.getDrawable(info.color)
+//            imageView.background = drawable
         }
     }
 

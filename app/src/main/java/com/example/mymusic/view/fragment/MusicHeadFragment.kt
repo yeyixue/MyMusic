@@ -45,8 +45,7 @@ class MusicHeadFragment : BaseMusicFragment() {
         // 禁止滑动，只能通过底部导航栏切换
         viewPager2.isUserInputEnabled = false
 
-        // 清除导航栏图标
-        clearNavigationIcon()
+        mBottNavigationView.labelVisibilityMode = NavigationBarView.LABEL_VISIBILITY_LABELED
     }
 
     override fun setListener() {
@@ -65,7 +64,7 @@ class MusicHeadFragment : BaseMusicFragment() {
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
                 // 更新底部导航栏选中状态
-                mBottNavigationView.menu.getItem(position).isChecked = true
+                mBottNavigationView.menu[position].isChecked = true
                 Log.d("MusicHeadFragment", "ViewPager2 selected page: $position")
             }
         })
@@ -76,13 +75,6 @@ class MusicHeadFragment : BaseMusicFragment() {
         viewPager2.currentItem = 0
     }
 
-    fun clearNavigationIcon(){
-        mBottNavigationView.setLabelVisibilityMode(NavigationBarView.LABEL_VISIBILITY_LABELED)
-        // 清除所有菜单项的图标
-        for (i in 0 until mBottNavigationView.menu.size) {
-            mBottNavigationView.menu[i].setIcon(null)
-        }
-    }
 
     override fun onDestroy() {
         super.onDestroy()
