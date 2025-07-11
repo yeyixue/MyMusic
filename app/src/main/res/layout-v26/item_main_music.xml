@@ -7,7 +7,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
 
-<!--        第一行状态栏-->
+    <!--        第一行状态栏-->
     <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/constaintLayoutModeChoose"
             android:layout_width="match_parent"
@@ -50,24 +50,15 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
 
 
-    <!--    底部进度条-->
-    <com.example.mymusic.view.SmartSeekBar
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/SSB_my"
-        android:paddingHorizontal="10dp"
-        android:layout_marginBottom="30dp"
-        android:progressDrawable="@drawable/seekbar_progress"
-        app:layout_constraintBottom_toBottomOf="parent"
-        android:layout_marginHorizontal="5dp"/>
-
+    <!--    中间区域-->
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/layout_middle"
+        android:id="@+id/constraintlayout_middle"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@id/SSB_my"
+
         app:layout_constraintTop_toBottomOf="@id/constaintLayoutModeChoose"
-        app:layout_constraintVertical_bias="1.0"
+        app:layout_constraintBottom_toTopOf="@id/constrainLayoutBottom"
+
         tools:layout_editor_absoluteX="0dp">
 
         <!--    图片栏-->
@@ -76,11 +67,13 @@
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_marginHorizontal="20dp"
+            android:layout_marginTop="20dp"
             android:src="@drawable/flower"
             app:cardCornerRadius="20dp"
-            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintDimensionRatio="1:1.2"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
             <ImageView
@@ -91,6 +84,21 @@
 
         </androidx.cardview.widget.CardView>
 
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+    <!--    底部进度条-->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/constrainLayoutBottom"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintVertical_bias="0.3"
+        tools:layout_editor_absoluteX="0dp"
+        android:layout_marginBottom="20dp"
+        app:layout_constraintBottom_toBottomOf="parent">
+
         <!--    歌词栏-->
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/constaintLayoutLyric"
@@ -99,17 +107,18 @@
             android:layout_marginVertical="10dp"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/imageViewMusicPicture">
+            app:layout_constraintTop_toTopOf="parent">
 
             <TextView
                 android:id="@+id/textViewLyricFirstLine"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="20dp"
-                android:text="qwe dfestasd do fim de semsda"
+                android:text="qwe dfestasd qwwwe"
                 android:textColor="@color/white"
-                android:textSize="25sp"
+                android:textSize="20sp"
                 android:textStyle="bold"
+                android:singleLine="true"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
@@ -120,6 +129,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="20dp"
                 android:text="qwe dfestasd do fim de semsda"
+                android:singleLine="true"
                 android:textColor="#898989"
                 android:textSize="20sp"
                 android:textStyle="normal"
@@ -346,7 +356,16 @@
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
+        <com.example.mymusic.view.SmartSeekBar
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/SSB_my"
+            android:paddingHorizontal="15dp"
+            android:progressDrawable="@drawable/seekbar_progress"
+            app:layout_constraintTop_toBottomOf="@id/constraintLayoutClickArea"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginVertical="10dp"
+            android:layout_marginHorizontal="5dp"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>
