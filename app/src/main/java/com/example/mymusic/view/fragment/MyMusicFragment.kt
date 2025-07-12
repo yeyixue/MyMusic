@@ -8,9 +8,10 @@ import android.view.ViewGroup
 import androidx.lifecycle.ViewModelProvider
 import com.example.mymusic.R
 import com.example.mymusic.viewmodel.MyMusicViewModel
+import com.example.mymusic.viewmodel.fragment.MyMusicFragmentViewModel
 
 class MyMusicFragment : BaseMusicFragment() {
-    private lateinit var mMyMusicViewModel: MyMusicViewModel
+    private lateinit var mMyMusicFragmentViewModel: MyMusicFragmentViewModel
 
     override fun getLayoutResId(): Int {
         return R.layout.fragment_my_music
@@ -18,8 +19,8 @@ class MyMusicFragment : BaseMusicFragment() {
 
     override fun initView() {
 
-        // 正确初始化 ViewModel（获取 MyMusicViewModel 实例）
-        mMyMusicViewModel = ViewModelProvider(this).get(MyMusicViewModel::class.java)
+        // 正确初始化 ViewModel（获取 MyMusicFragmentViewModel 实例）
+        mMyMusicFragmentViewModel = ViewModelProvider(this).get(MyMusicFragmentViewModel::class.java)
     }
 
     override fun setListener() {

@@ -83,7 +83,9 @@ dependencies {
 
     // lottie
     implementation("com.airbnb.android:lottie:6.0.0")
-
+    implementation("com.squareup.retrofit2:adapter-rxjava3:2.9.0")
+    // 添加 RxAndroid 库（提供 Android 主线程调度器）
+    implementation("io.reactivex.rxjava3:rxandroid:3.0.2")
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

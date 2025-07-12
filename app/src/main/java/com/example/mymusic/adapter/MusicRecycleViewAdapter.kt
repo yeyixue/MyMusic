@@ -1,4 +1,5 @@
 package com.example.mymusic.adapter
+
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -6,242 +7,303 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.airbnb.lottie.LottieAnimationView
 import com.example.mymusic.R
+import com.example.mymusic.repo.entity.MusicInfo
+import com.example.mymusic.view.AutoScrollTextView
 
 /**
- * RecyclerView的适配器，用于展示NoteInfo数据列表
- * @param infoList 要显示的NoteInfo数据列表
+ * RecyclerView的适配器，用于展示MusicInfo数据列表
+ * 根据isVideo字段区分音乐/视频两种视图类型，适配复用布局中的控件
  */
 class MusicRecycleViewAdapter(
-//    private var infoList: List<NoteInfo>
-    initialList: List<NoteInfo> = emptyList()
+    initialList: List<MusicInfo> = emptyList()
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    // 定义属性并实现自定义 setter
-    var infoList: List<NoteInfo> = initialList
+    var infoList: List<MusicInfo> = initialList
         set(value) {
             val diffResult = DiffUtil.calculateDiff(MyDiffCallback(field, value))
-            field = value  // field 指代旧值
-            // 分发差异刷新（必须在主线程）
+            field = value
             diffResult.dispatchUpdatesTo(this)
         }
 
-    // 定义视图类型常量（Kotlin中用伴生对象存放）
     companion object {
-        const val TYPE_ITEM1 = 1  // 第一种视图类型
-        const val TYPE_ITEM2 = 2  // 第二种视图类型
+        const val TYPE_MUSIC = 1
+        const val TYPE_VIDEO = 2
+
+        /**
+         * 数字格式化工具：
+         * @param count 原始数字
+         * @return 格式化后的字符串
+         */
+        fun formatCount(count: Int): String {
+            return when {
+                count >= 10000 -> {
+                    val value = (count.toFloat() / 10000).toInt()  // 向下取整（舍弃小数部分）
+                    "${value}w+"
+                }
+                count >= 1000 -> {
+                    val value = (count.toFloat() / 1000).toInt()  // 向下取整
+                    "${value}k+"
+                }
+                else -> count.toString()
+            }
+        }
+
     }
 
-    // 添加 getItemViewType 方法，区分视图类型
     override fun getItemViewType(position: Int): Int {
-        // 根据数据中的 type 字段返回对应类型
-        return infoList[position].type
+        return if (infoList[position].isVideo) TYPE_VIDEO else TYPE_MUSIC
     }
 
-    /**
-     * 创建ViewHolder实例，用于显示列表项
-     * @param viewGroup 父视图组
-     * @param viewType 视图类型
-     * @return 返回MyHolder实例
-     */
-    override fun onCreateViewHolder(
-        viewGroup: ViewGroup,
-        viewType: Int
-    ): RecyclerView.ViewHolder {
-        // 加载列表项布局文件
-
-        val inflater = LayoutInflater.from(viewGroup.context)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        val inflater = LayoutInflater.from(parent.context)
         return when (viewType) {
-            TYPE_ITEM1 -> {
-                // 加载第一种布局
-                val view = inflater.inflate(R.layout.item_main_music, viewGroup, false)
-                MyHolderMusic(view)
+            TYPE_MUSIC -> {
+                val view = inflater.inflate(R.layout.item_main_music, parent, false)
+                MusicViewHolder(view)
             }
-            TYPE_ITEM2 -> {
-                // 加载第二种布局
-                val view = inflater.inflate(R.layout.item_main_video, viewGroup, false)
-                MyHolderVideo(view)
+            TYPE_VIDEO -> {
+                val view = inflater.inflate(R.layout.item_main_video, parent, false)
+                VideoViewHolder(view)
             }
-            else -> throw IllegalArgumentException("未知视图类型")
+            else -> throw IllegalArgumentException("未知视图类型: $viewType")
         }
     }
 
-    override fun onBindViewHolder(
-        holder: RecyclerView.ViewHolder,
-        position: Int
-    ) {
-        // 从数据列表中获取对应位置的数据项
-        val info = infoList[position]
-
-        // 调用ViewHolder的绑定方法设置数据
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        val musicInfo = infoList[position]
         when (holder) {
-            is MyHolderMusic -> holder.bind(info)  // 绑定到第一种ViewHolder
-            is MyHolderVideo -> holder.bind(info)  // 绑定到第二种ViewHolder
+            is MusicViewHolder -> holder.bind(musicInfo)
+            is VideoViewHolder -> holder.bind(musicInfo)
         }
 
-        // 设置列表项的点击事件
-        // 调用接口的方法时，实际运行的是 “实现了该接口的类” 所重写的方法
-        // 在activity中实现了接口方法
         holder.itemView.setOnClickListener {
-            // 回调监听器的点击方法，传递位置和数据项
-            onItemClickListener?.onItemClick(info)
+            onItemClickListener?.onItemClick(musicInfo)
         }
     }
 
     override fun onBindViewHolder(
         holder: RecyclerView.ViewHolder,
         position: Int,
-        payloads: MutableList<Any>  // 新增 payload 参数
+        payloads: MutableList<Any>
     ) {
-        // 如果有 payload，优先处理局部刷新
         if (payloads.isNotEmpty()) {
             val payload = payloads[0] as? Map<*, *> ?: return
-            val info = infoList[position]
+            val musicInfo = infoList[position]
             when (holder) {
-                is MyHolderMusic -> {
-                    // 处理 color 变化
-                    payload["color"]?.let { color ->
-                        val drawable = holder.itemView.context.getDrawable(color as Int)
-//                        holder.imageView.background = drawable
+                is MusicViewHolder -> {
+                    // 音乐项局部刷新
+                    payload["title"]?.let { holder.tvTitle.text = it as String }
+                    payload["singer"]?.let { holder.tvSinger.text = it as String }
+                    payload["lyricist"]?.let { holder.tvLyricist.text = "作词：$it" }
+                    payload["composer"]?.let { holder.tvComposer.text = "作曲：$it" }
+                    payload["followed"]?.let { holder.updateFollowStatus(it as Boolean) }
+                    payload["liked"]?.let { holder.updateLikeStatus(it as Boolean) }
+                    payload["likeCount"]?.let {
+                        holder.tvLikeCount.text = formatCount(it as Int)  // 局部刷新时格式化
+                    }
+                    payload["commentCount"]?.let {
+                        holder.tvCommentCount.text = formatCount(it as Int)
+                    }
+                    payload["shareCount"]?.let {
+                        holder.tvShareCount.text = formatCount(it as Int)
                     }
                 }
-                is MyHolderVideo -> {
-                    // 处理 imgRes 变化
-                    payload["imgRes"]?.let { imgRes ->
-                        val drawable = holder.itemView.context.getDrawable((imgRes as Int).takeIf { it != 0 }
-                            ?: R.drawable.ic_launcher_background)
-                        holder.imageView.setImageDrawable(drawable)
+                is VideoViewHolder -> {
+                    // 视频项局部刷新
+                    payload["title"]?.let { holder.tvTitle.text = it as String }
+                    payload["singer"]?.let { holder.tvSinger.text = it as String }
+                    payload["liked"]?.let { holder.updateLikeStatus(it as Boolean) }
+                    payload["likeCount"]?.let {
+                        holder.tvLikeCount.text = formatCount(it as Int)  // 局部刷新时格式化
                     }
+                    payload["cover"]?.let { holder.ivCover.setImageResource(it as Int) }
                 }
             }
-            return  // 局部刷新后直接返回，无需全量绑定
+            return
         }
-        // 没有 payload → 全量绑定（调用原来的 onBindViewHolder）
         super.onBindViewHolder(holder, position, payloads)
     }
 
+    override fun getItemCount(): Int = infoList.size
 
+    // 音乐类型ViewHolder
+    inner class MusicViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        // 绑定item_main_music布局中的控件
+        val tvTitle: AutoScrollTextView = itemView.findViewById(R.id.textViewSongTitle)
+        val tvSinger: AutoScrollTextView = itemView.findViewById(R.id.textViewSongSinger)
+        val tvLyricist: TextView = itemView.findViewById(R.id.textViewLyricFirstLine)
+        val tvComposer: TextView = itemView.findViewById(R.id.textViewLyricSecondLine)
+        val tvFollow: TextView = itemView.findViewById(R.id.textViewSingerFollow)
+        val lottieLike: LottieAnimationView = itemView.findViewById(R.id.lottie_heart)
+        val tvLikeCount: TextView = itemView.findViewById(R.id.text_like_count)  // 点赞数
+        val tvCommentCount: TextView = itemView.findViewById(R.id.text_review_count)  // 评论数
+        val tvShareCount: TextView = itemView.findViewById(R.id.text_share_count)  // 分享数
+        val ivSongImage: ImageView = itemView.findViewById(R.id.imageViewSongIMG)
 
+        fun setRandomSongImage() {
+            val randomIndex = (0..22).random()
+            val resName = "img$randomIndex"
+            val resId = itemView.context.resources.getIdentifier(resName, "mipmap", itemView.context.packageName)
+            if (resId != 0) ivSongImage.setImageResource(resId)
+            else ivSongImage.setImageResource(R.mipmap.img0)
+        }
 
+        fun bind(musicInfo: MusicInfo) {
+            tvTitle.text = musicInfo.title
+            tvSinger.text = musicInfo.singer
+            tvLyricist.text = "作词：${musicInfo.lyricist}"
+            tvComposer.text = "作曲：${musicInfo.composer}"
+            updateFollowStatus(musicInfo.followed)
+            updateLikeStatus(musicInfo.liked)
 
-    /**
-     * 将数据绑定到ViewHolder上
-     * @param holder 要绑定数据的ViewHolder
-     * @param position 数据在列表中的位置
-     */
-//    override fun onBindViewHolder(holder: MusicRecycleViewAdapter.MyHolder, position: Int) {
-//
-//    }
+            // 格式化显示点赞数、评论数、分享数
+            tvLikeCount.text = formatCount(musicInfo.likeCount)
+            tvCommentCount.text = formatCount(musicInfo.commentCount)
+            tvShareCount.text = formatCount(musicInfo.shareCount)
 
-    /**
-     * 获取数据列表的大小
-     * @return 数据列表的大小
-     */
-    override fun getItemCount(): Int {
-        return infoList.size
-    }
+            setRandomSongImage()
 
-    /**
-     * 列表项的ViewHolder类，用于缓存视图引用
-     * @param itemView 列表项的根视图
-     */
-    inner class MyHolderMusic(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        // 缓存列表项中的TextView控件引用
-//        val imageView: ImageView = itemView.findViewById(R.id.imageView)
+            // 关注按钮点击
+            tvFollow.setOnClickListener {
+                onItemActionListener?.onFollowStatusChanged(adapterPosition, !musicInfo.followed)
+            }
 
-        /**
-         * 将NoteInfo数据绑定到视图上
-         * @param info 要绑定的NoteInfo数据
-         */
-        fun bind(info: NoteInfo) {
-            // 通过 itemView 的上下文获取颜色对应的 Drawable
-//            val drawable = itemView.context.getDrawable(info.color)
-//            imageView.background = drawable
+            // 点赞按钮点击
+            lottieLike.setOnClickListener {
+                onItemActionListener?.onLikeStatusChanged(adapterPosition, !musicInfo.liked)
+            }
+        }
+
+        fun updateFollowStatus(isFollowed: Boolean) {
+            tvFollow.text = if (isFollowed) "已关注" else "关注"
+        }
+
+        fun updateLikeStatus(isLiked: Boolean) {
+            if (isLiked) {
+                lottieLike.playAnimation()
+                lottieLike.progress = 1f
+            } else {
+                lottieLike.cancelAnimation()
+                lottieLike.progress = 0f
+            }
         }
     }
 
-    // 修改 MyHolderVideo 的 bind 方法，使用动态数据
-    inner class MyHolderVideo(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val imageView: ImageView = itemView.findViewById(R.id.imageView)
+    // 视频类型ViewHolder
+    inner class VideoViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        // 绑定item_main_video布局中的控件
+        val tvTitle: AutoScrollTextView = itemView.findViewById(R.id.textViewSongTitle)
+        val tvSinger: AutoScrollTextView = itemView.findViewById(R.id.textViewSongSinger)
+        val ivCover: ImageView = itemView.findViewById(R.id.imageViewSongVideo)  // 视频封面
+        val lottieLike: LottieAnimationView = itemView.findViewById(R.id.lottie_heart)  // 点赞动画
+        val tvLikeCount: TextView = itemView.findViewById(R.id.text_like_count)  // 点赞数
+        val tvCommentCount: TextView = itemView.findViewById(R.id.text_review_count)  // 评论数
+        val tvShareCount: TextView = itemView.findViewById(R.id.text_share_count)  // 分享数
 
-        fun bind(info: NoteInfo) {
-            // 使用数据中的 imgRes 字段（而非硬编码）
-            val drawable = itemView.context.getDrawable(info.imgRes ?: R.drawable.ic_launcher_background)
-            imageView.setImageDrawable(drawable)
+        fun bind(musicInfo: MusicInfo) {
+            tvTitle.text = musicInfo.title
+            tvSinger.text = musicInfo.singer
+            ivCover.setImageResource(R.drawable.flower)
+
+            // 格式化显示点赞数、评论数、分享数
+            tvLikeCount.text = formatCount(musicInfo.likeCount)
+            tvCommentCount.text = formatCount(musicInfo.commentCount)
+            tvShareCount.text = formatCount(musicInfo.shareCount)
+
+            updateLikeStatus(musicInfo.liked)
+
+            // 视频点赞点击
+            lottieLike.setOnClickListener {
+                onItemActionListener?.onLikeStatusChanged(adapterPosition, !musicInfo.liked)
+            }
+        }
+
+        fun updateLikeStatus(isLiked: Boolean) {
+            if (isLiked) {
+                lottieLike.playAnimation()
+                lottieLike.progress = 1f
+            } else {
+                lottieLike.cancelAnimation()
+                lottieLike.progress = 0f
+            }
         }
     }
 
-
-
-
-
-    class MyDiffCallback(
-        private val oldList: List<NoteInfo>, private val newList: List<NoteInfo>
+    // DiffUtil回调（补充评论数、分享数的差异检查）
+    inner class MyDiffCallback(
+        private val oldList: List<MusicInfo>,
+        private val newList: List<MusicInfo>
     ) : DiffUtil.Callback() {
 
-        override fun getOldListSize(): Int = oldList.size
-        override fun getNewListSize(): Int = newList.size
+        override fun getOldListSize() = oldList.size
+        override fun getNewListSize() = newList.size
 
         override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-            // 把这里想成是比较holder的类型, 比如纯文本的holder和纯图片的holder的type肯定不同
-            return oldList[oldItemPosition].type == newList[newItemPosition].type
+            return oldList[oldItemPosition].songId == newList[newItemPosition].songId
         }
 
         override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-            // 把这里想成是同一种holder的比较,比如都是纯文本holder,但是title不一致
-//            return oldList[oldItemPosition].color == newList[newItemPosition].color
-            return oldList.equals(newList)
+            val old = oldList[oldItemPosition]
+            val new = newList[newItemPosition]
+            return old.title == new.title &&
+                    old.singer == new.singer &&
+                    old.liked == new.liked &&
+                    old.likeCount == new.likeCount &&
+                    old.commentCount == new.commentCount &&  // 检查评论数变化
+                    old.shareCount == new.shareCount &&  // 检查分享数变化
+                    old.isVideo == new.isVideo
         }
 
-        override fun getChangePayload(oldItemPosition: Int, newItemPosition: Int): Any? {
-            val oldItem = oldList[oldItemPosition]
-            val newItem = newList[newItemPosition]
+        override fun getChangePayload(oldItemPosition: Int, newItemPosition: Int): MutableMap<String, Any>? {
+            val old = oldList[oldItemPosition]
+            val new = newList[newItemPosition]
+            val payload = mutableMapOf<String, Any>()
 
-            // 构建差异数据的 payload
-            val diffPayload = mutableMapOf<String, Any>()
-            if (oldItem.color != newItem.color) {
-                diffPayload["someField"] = newItem.color
+            if (old.title != new.title) payload["title"] = new.title
+            if (old.singer != new.singer) payload["singer"] = new.singer
+            if (old.liked != new.liked) payload["liked"] = new.liked
+            if (old.likeCount != new.likeCount) payload["likeCount"] = new.likeCount
+            if (old.commentCount != new.commentCount) payload["commentCount"] = new.commentCount  // 评论数差异
+            if (old.shareCount != new.shareCount) payload["shareCount"] = new.shareCount  // 分享数差异
+
+            // 视频特有字段
+            if (old.isVideo && new.isVideo) {
+                // 假设的视频封面字段
+                // if (old.videoCover != new.videoCover) payload["cover"] = new.videoCover
             }
-            // ... 其他需要差异的字段
 
-            return diffPayload
+            // 音乐特有字段
+            if (!old.isVideo && !new.isVideo) {
+                if (old.lyricist != new.lyricist) payload["lyricist"] = new.lyricist
+                if (old.composer != new.composer) payload["composer"] = new.composer
+                if (old.followed != new.followed) payload["followed"] = new.followed
+            }
 
-
+            return if (payload.isEmpty()) null else payload
         }
     }
 
-
-    /**
-     * 列表项点击事件的回调接口
-     * 由Activity具体实现这个接口声明
-     */
+    // 点击事件接口
     interface OnItemClickListener {
-        /**
-         * 当列表项被点击时调用
-         * @param noteInfo 被点击的列表项对应的数据
-         */
-        fun onItemClick(noteInfo: NoteInfo)
+        fun onItemClick(musicInfo: MusicInfo)
     }
 
-    // 点击事件监听器变量
-    private var onItemClickListener: OnItemClickListener? = null
+    // 交互事件接口
+    interface OnItemActionListener {
+        fun onFollowStatusChanged(position: Int, isFollowed: Boolean)
+        fun onLikeStatusChanged(position: Int, isLiked: Boolean)
+    }
 
-    /**
-     * 设置列表项点击事件监听器
-     * @param listener 实现了OnItemClickListener接口的监听器
-     */
+    private var onItemClickListener: OnItemClickListener? = null
+    private var onItemActionListener: OnItemActionListener? = null
+
     fun setOnItemClickListener(listener: OnItemClickListener) {
         this.onItemClickListener = listener
     }
-}
 
-/**
- * 数据类，用于存储笔记信息
- * @param name 笔记名称
- */
-// 新增 type 字段，标识当前item是音乐类型还是视频类型
-data class NoteInfo(
-    val color: Int,    // 颜色资源（TYPE_ITEM1）
-    val type: Int,     // 视图类型
-    val imgRes: Int? = null  // 图片资源（TYPE_ITEM2，可选）
-)
+    fun setOnItemActionListener(listener: OnItemActionListener) {
+        this.onItemActionListener = listener
+    }
+}

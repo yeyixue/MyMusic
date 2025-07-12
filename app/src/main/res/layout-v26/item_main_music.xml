@@ -1,371 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/teal_200"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:background="@color/teal_200">
 
+    <!-- 引入顶部状态栏（复用区域1） -->
+    <include
+        layout="@layout/layout_top_bar"
+    android:id="@+id/include_top_bar"
+    app:layout_constraintTop_toTopOf="parent"
+    app:layout_constraintLeft_toLeftOf="parent"
+    app:layout_constraintRight_toRightOf="parent"/>
 
-    <!--        第一行状态栏-->
-    <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/constaintLayoutModeChoose"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_marginTop="10dp"
-            android:layout_marginBottom="20dp"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent">
-
-            <ImageView
-                android:layout_marginLeft="20dp"
-                android:id="@+id/imageViewModeChoose"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:src="@drawable/outline_books_movies_and_music_24"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="30dp"
-                android:textSize="20dp"
-                android:textColor="@color/white"
-                android:textStyle="bold"
-                android:layout_marginLeft="10dp"
-                app:layout_constraintLeft_toRightOf="@id/imageViewModeChoose"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
-                android:text="模式选择"/>
-
-            <ImageView
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:src="@mipmap/search"
-                android:layout_marginRight="20dp"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"/>
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-
-    <!--    中间区域-->
+    <!-- 中间区域（原constraintlayout_middle） -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/constraintlayout_middle"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/include_top_bar"
+    app:layout_constraintBottom_toTopOf="@id/include_bottom_controls"
+    tools:layout_editor_absoluteX="0dp">
 
-        app:layout_constraintTop_toBottomOf="@id/constaintLayoutModeChoose"
-        app:layout_constraintBottom_toTopOf="@id/constrainLayoutBottom"
+    <!-- 图片栏（原imageViewMusicPicture） -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/imageViewMusicPicture"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginHorizontal="20dp"
+        app:cardCornerRadius="20dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
-        tools:layout_editor_absoluteX="0dp">
-
-        <!--    图片栏-->
-        <androidx.cardview.widget.CardView
-            android:id="@+id/imageViewMusicPicture"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_marginHorizontal="20dp"
-            android:layout_marginTop="20dp"
-            android:src="@drawable/flower"
-            app:cardCornerRadius="20dp"
-            app:layout_constraintDimensionRatio="1:1.2"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <ImageView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:scaleType="centerCrop"
-                android:src="@drawable/flower" />
-
-        </androidx.cardview.widget.CardView>
-
-
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-
-    <!--    底部进度条-->
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/constrainLayoutBottom"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintVertical_bias="0.3"
-        tools:layout_editor_absoluteX="0dp"
-        android:layout_marginBottom="20dp"
-        app:layout_constraintBottom_toBottomOf="parent">
-
-        <!--    歌词栏-->
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/constaintLayoutLyric"
+        <ImageView
+            android:id="@+id/imageViewSongIMG"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginVertical="10dp"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <TextView
-                android:id="@+id/textViewLyricFirstLine"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="20dp"
-                android:text="qwe dfestasd qwwwe"
-                android:textColor="@color/white"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:singleLine="true"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <TextView
-                android:id="@+id/textViewLyricSecondLine"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="20dp"
-                android:text="qwe dfestasd do fim de semsda"
-                android:singleLine="true"
-                android:textColor="#898989"
-                android:textSize="20sp"
-                android:textStyle="normal"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/textViewLyricFirstLine" />
-
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-        <!--    歌曲信息栏-->
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/constaintLayoutSongMsg"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginVertical="10dp"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/constaintLayoutLyric">
-
-            <LinearLayout
-                android:id="@+id/linerLayoutSong"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="20dp"
-                android:orientation="horizontal"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
-
-                <com.example.mymusic.view.AutoScrollTextView
-                    android:id="@+id/textViewSongTitle"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:ellipsize="none"
-                    android:scrollHorizontally="true"
-                    android:singleLine="true"
-                    android:text="歌曲名xxxxxxxxxxxxxxsssxxxxxxx"
-                    android:textColor="@color/white"
-                    android:textSize="30sp"
-                    android:textStyle="bold" />
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/textViewSongQuality"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginLeft="10dp"
-                        android:layout_marginBottom="20dp"
-                        android:text="极高"
-                        android:padding="2dp"
-                        android:textColor="#FBF5F5"
-                        android:background="#80D7D7D7"
-                        android:textSize="14sp"
-                        android:textStyle="normal" />
-
-                    <TextView
-                        android:id="@+id/textViewSongEffects"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="5dp"
-                        android:text="音效"
-                        android:background="#80D7D7D7"
-                        android:padding="2dp"
-                        android:textColor="#FBF5F5"
-                        android:textSize="14sp"
-                        android:textStyle="normal" />
-                </LinearLayout>
-
-
-            </LinearLayout>
-
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="20dp"
-                android:orientation="horizontal"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/linerLayoutSong">
-
-                <com.example.mymusic.view.AutoScrollTextView
-                    android:id="@+id/textViewSongSinger"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:ellipsize="none"
-                    android:scrollHorizontally="true"
-                    android:singleLine="true"
-                    android:text="歌xxxxxxxxx手"
-                    android:textColor="#FBF5F5"
-                    android:textSize="20sp"
-                    android:textStyle="normal"
-                    app:layout_constraintLeft_toLeftOf="parent" />
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content">
-
-                    <TextView
-                        android:id="@+id/textViewSingerFollow"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="5dp"
-                        android:layout_marginTop="3dp"
-                        android:text="关注"
-                        android:background="#80D7D7D7"
-                        android:padding="2dp"
-                        android:textColor="#FBF5F5"
-                        android:textSize="12sp"
-                        android:textStyle="normal" />
-                </LinearLayout>
-            </LinearLayout>
-
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-        <!--    点赞、评论、分享-->
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/constraintLayoutClickArea"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/constaintLayoutSongMsg">
-
-            <!-- 点赞动画 -->
-            <com.airbnb.lottie.LottieAnimationView
-                android:id="@+id/lottie_heart"
-                android:layout_width="55dp"
-                android:layout_height="55dp"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:lottie_autoPlay="false"
-                app:lottie_fileName="heart_lottie_no_background.json"
-                app:lottie_loop="false" />
-            <!-- 点赞数 -->
-            <TextView
-                android:id="@+id/text_like_count"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="70w+"
-                android:textSize="12sp"
-                android:textColor="#FFFFFF"
-                android:textStyle="bold"
-                android:padding="2dp"
-                app:layout_constraintCircle="@id/lottie_heart"
-                app:layout_constraintCircleRadius="32dp"
-                app:layout_constraintCircleAngle="70"
-                tools:ignore="MissingConstraints" />
-
-            <ImageView
-                android:id="@+id/review"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:layout_marginLeft="25dp"
-                android:src="@mipmap/review"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintLeft_toRightOf="@id/lottie_heart"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <TextView
-                android:id="@+id/text_review_count"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="187"
-                android:textSize="12sp"
-                android:textColor="#FFFFFF"
-                android:textStyle="bold"
-                android:padding="2dp"
-                app:layout_constraintCircle="@id/review"
-                app:layout_constraintCircleRadius="32dp"
-                app:layout_constraintCircleAngle="70"
-                tools:ignore="MissingConstraints" />
-
-
-            <ImageView
-                android:id="@+id/share"
-                android:layout_width="35dp"
-                android:layout_height="35dp"
-                android:layout_marginLeft="25dp"
-                android:src="@mipmap/share"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintLeft_toRightOf="@id/review"
-                app:layout_constraintTop_toTopOf="parent" />
-            <TextView
-                android:id="@+id/text_share_count"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="2186"
-                android:textSize="12sp"
-                android:textColor="#FFFFFF"
-                android:textStyle="bold"
-                android:padding="2dp"
-                app:layout_constraintCircle="@id/share"
-                app:layout_constraintCircleRadius="32dp"
-                app:layout_constraintCircleAngle="70"
-                tools:ignore="MissingConstraints" />
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginRight="20dp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
-
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_marginRight="20dp"
-                    android:src="@mipmap/dislike" />
-
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@mipmap/more" />
-
-            </LinearLayout>
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-        <com.example.mymusic.view.SmartSeekBar
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/SSB_my"
-            android:paddingHorizontal="15dp"
-            android:progressDrawable="@drawable/seekbar_progress"
-            app:layout_constraintTop_toBottomOf="@id/constraintLayoutClickArea"
-            app:layout_constraintBottom_toBottomOf="parent"
-            android:layout_marginVertical="10dp"
-            android:layout_marginHorizontal="5dp"/>
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:src="@mipmap/img11" />
+    </androidx.cardview.widget.CardView>
 </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- 引入底部控制区域（复用区域2） -->
+<include
+    layout="@layout/layout_bottom_controls"
+    android:id="@+id/include_bottom_controls"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintLeft_toLeftOf="parent"
+    app:layout_constraintRight_toRightOf="parent"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>

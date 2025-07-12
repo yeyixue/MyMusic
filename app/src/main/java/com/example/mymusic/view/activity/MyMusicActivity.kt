@@ -1,20 +1,17 @@
 package com.example.mymusic.view.activity
 
 import DepthPageTransformer
-import android.os.Bundle
 import android.view.MotionEvent
-import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModelProvider
 import androidx.viewpager2.widget.ViewPager2
 import com.example.mymusic.R
 import com.example.mymusic.adapter.MusicAdapter
 import com.example.mymusic.view.fragment.MusicHeadFragment
 import com.example.mymusic.view.fragment.MusicStyleFragment
-import com.example.mymusic.viewmodel.fragment.MyMusicViewModel
+import com.example.mymusic.viewmodel.MyMusicViewModel
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 
@@ -23,7 +20,10 @@ class MyMusicActivity : BaseMusicActivity() {
     private lateinit var mMusicHeadFragment: MusicHeadFragment
     private lateinit var mMusicStyleFragment: MusicStyleFragment
     private lateinit var tabLayout: TabLayout
-    private lateinit var mMyMusicViewModel:MyMusicViewModel
+    private lateinit var mMyMusicViewModel: MyMusicViewModel
+
+    var currentMusicId:Int=-1
+    val isPlaying: Boolean=false
 
     override fun getLayoutResId(): Int =R.layout.activity_my_music
 
@@ -42,6 +42,16 @@ class MyMusicActivity : BaseMusicActivity() {
 
     override fun initData() {
         setViewPager()
+
+        setMusicDefault()
+
+    }
+
+    private fun setMusicDefault() {
+//        // 启动的时候从网络获取歌单，
+//        mMyMusicViewModel.setPlayListDefault()
+
+        //在播放页设置启动音乐
     }
 
     fun setViewPager(){
