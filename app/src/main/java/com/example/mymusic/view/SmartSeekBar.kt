@@ -5,6 +5,7 @@ import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.LayerDrawable
 import android.util.AttributeSet
@@ -12,6 +13,7 @@ import android.view.MotionEvent
 import android.view.ViewTreeObserver.OnGlobalLayoutListener
 import androidx.appcompat.widget.AppCompatSeekBar
 import androidx.core.content.ContextCompat
+import androidx.viewpager2.widget.ViewPager2
 import com.example.mymusic.R
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -27,10 +29,10 @@ class SmartSeekBar @JvmOverloads constructor(
     private val thumbNormal: Drawable? = ContextCompat.getDrawable(context, R.drawable.seekbar_thumb)
     private val thumbDragging: Drawable? = ContextCompat.getDrawable(context, R.drawable.seekbar_thumb_large)
     private val insetNormal = 18
-    private val insetDragging = 17
+    private val insetDragging = 16
 
     // 状态变量
-    private var isDragging = false
+    var isDragging = false
     private var isUserInteracting = false // 控件内部管理用户交互状态
     private var initialX = 0f
     private var initialProgress = 0
@@ -41,6 +43,13 @@ class SmartSeekBar @JvmOverloads constructor(
 
     // 动画相关
     private var progressAnimator: ValueAnimator? = null
+
+    // 扩展的触摸区域高度（dp，上下各扩展该值）
+    private val touchExpansion = dp2px(40f) // 可根据需求调整
+    // dp转px工具方法
+    private fun dp2px(dp: Float): Int {
+        return (dp * context.resources.displayMetrics.density + 0.5f).toInt()
+    }
 
     // 扩展回调接口（包含时间信息，减少Activity计算）
     interface OnProgressActionListener {
@@ -67,6 +76,13 @@ class SmartSeekBar @JvmOverloads constructor(
                 }
             }
         })
+    }
+
+    override fun getHitRect(outRect: Rect) {
+        super.getHitRect(outRect)
+        // 扩大垂直方向的触摸区域：上边界上移 touchExpansion，下边界下移 touchExpansion
+        outRect.top -= touchExpansion
+        outRect.bottom += touchExpansion
     }
 
 
@@ -124,6 +140,21 @@ class SmartSeekBar @JvmOverloads constructor(
         }
     }
 
+    // 查找父级 ViewPager
+    // 查找父级 ViewPager2
+    private fun findParentViewPager2(): ViewPager2? {
+        var parent = parent
+        while (parent != null) {
+            if (parent is ViewPager2) {
+                return parent
+            }
+            parent = parent.parent
+        }
+        return null
+    }
+
+    // 用于记录是否在进度条交互中，避免重复设置
+    private var isInterceptDisabled = false
     // 触摸事件处理（优化用户交互状态管理）
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -135,12 +166,19 @@ class SmartSeekBar @JvmOverloads constructor(
                 return super.onTouchEvent(event)
             }
         }
+        // 获取父级 ViewPager
+        val viewPager2 = findParentViewPager2()
 
         val touchX = event.x - paddingLeft
         val validTouchX = touchX.coerceIn(0f, seekBarWidth.toFloat())
 
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
+                viewPager2?.let {
+                    it.requestDisallowInterceptTouchEvent(true)
+                    isInterceptDisabled = true
+                }
+
                 initialX = validTouchX
                 initialProgress = progress
                 isDragging = false
@@ -156,7 +194,11 @@ class SmartSeekBar @JvmOverloads constructor(
                     if (abs(validTouchX - initialX) < dragThreshold) return true
                     isDragging = true
                 }
-
+                // 按下进度条时，禁止 ViewPager2 拦截事件
+                viewPager2?.let {
+                    it.requestDisallowInterceptTouchEvent(true)
+                    isInterceptDisabled = true
+                }
                 val deltaProgress = ((validTouchX - initialX) * scaledTouchFactor).roundToInt()
                 val newProgress = (initialProgress + deltaProgress).coerceIn(0, 100)
                 if (newProgress != progress) {
@@ -169,6 +211,11 @@ class SmartSeekBar @JvmOverloads constructor(
             }
 
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                // 触摸结束，恢复 ViewPager2 拦截事件
+                viewPager2?.let {
+                    it.requestDisallowInterceptTouchEvent(false)
+                    isInterceptDisabled = false
+                }
                 //validTouchX 用户当前手指触摸点  scaledTouchFactor 每个像素对应多少进度百分比
                 //当前手指 X 坐标 × 每像素代表的进度 → 当前进度百分比
                 val finalProgress = if (isDragging) progress else (validTouchX * scaledTouchFactor).roundToInt().coerceIn(0, 100)

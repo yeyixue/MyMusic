@@ -1,5 +1,7 @@
 package com.example.mymusic.repo.remote
+import com.example.mymusic.BuildConfig
 
+import com.example.mymusic.R
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -10,7 +12,10 @@ object RetrofitConnection {
 
 //    private const val BASE_URL = "http://192.168.0.105:8000/"
 //    private const val BASE_URL = "http://192.168.231.60:8000/"
-    private const val BASE_URL = "http://192.168.175.60:8000/"
+//    private const val BASE_URL = "http://192.168.231.60:8000/"
+    val ip = BuildConfig.SERVER_IP
+    private  var BASE_URL = "http://$ip:8000/"
+
 
 
     // 用于添加拦截器、日志等

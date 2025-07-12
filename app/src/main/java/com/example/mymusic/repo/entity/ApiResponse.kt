@@ -12,8 +12,9 @@ data class MusicInfo(
     val singer: String,
     val lyricist: String,
     val composer: String,
-    val followed: Boolean,
-    val liked: Boolean,
+    val duration: Int,
+    var followed: Boolean,
+    var liked: Boolean,
     val disliked: Boolean,
     val isVideo: Boolean,
     val likeCount: Int,     // 点赞数

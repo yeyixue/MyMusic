@@ -1,6 +1,9 @@
 package com.example.mymusic.view.fragment
 
 import android.util.Log
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
@@ -12,10 +15,26 @@ import com.example.mymusic.view.SmartSeekBar
 import com.example.mymusic.viewmodel.fragment.MainMusicViewModel
 
 class MainMusicFragment : BaseMusicFragment() {
-    private lateinit var mMainMusicViewModel: MainMusicViewModel
+//    internal lateinit var mMainMusicViewModel: MainMusicViewModel
+
+    // 使用 by lazy 实现延迟初始化
+    val mMainMusicViewModel: MainMusicViewModel by lazy {
+        ViewModelProvider(this).get(MainMusicViewModel::class.java)
+    }
+
+    // 添加静态访问方法
+    companion object {
+        fun getInstance(): MainMusicFragment {
+            return MainMusicFragment()
+        }
+    }
     private lateinit var mMusicRecycleViewAdapter: MusicRecycleViewAdapter
     private lateinit var mRecyclerView: RecyclerView
-    private lateinit var progressBar: SmartSeekBar
+
+    // 记录当前播放的歌曲ID和中心页面位置
+    private var currentPlayingSongId: String? = null
+    private var currentCenterPosition: Int = -1
+
     // 修正列表声明语法（初始为空列表）
     private var musicList: List<MusicInfo> = emptyList()
 
@@ -24,63 +43,40 @@ class MainMusicFragment : BaseMusicFragment() {
     }
 
     override fun initView() {
-        mMainMusicViewModel = ViewModelProvider(this)[MainMusicViewModel::class.java]
+//        mMainMusicViewModel = ViewModelProvider(this)[MainMusicViewModel::class.java]
         mRecyclerView = rootView.findViewById(R.id.recycleViewMainMusic)
         setupRecyclerView() // 先初始化RecyclerView和适配器
+        // 监听ViewModel的滚动指令，自动滚动到下一页
+        mMainMusicViewModel.scrollToPosition.observe(viewLifecycleOwner) { position ->
+            position?.let {
+                // 1. 滚动到下一首的位置（带动画效果）
+                mRecyclerView.smoothScrollToPosition(it)
+                // 2. 清除指令，避免重复滚动
+                mMainMusicViewModel.clearScrollCommand()
+            }
+        }
+
         setupMusicList()    // 再监听数据变化
-        progressBar = rootView.findViewById(R.id.SSB_my)
-        setupProgressBar()
     }
 
-    // 进度条双向绑定逻辑
-    private fun setupProgressBar() {
-        // 1. 监听播放总时长变化，设置进度条最大值
-        mMainMusicViewModel.totalDuration.observe(viewLifecycleOwner) { total ->
-            progressBar.max = total
-        }
-
-        // 2. 监听当前进度变化，更新进度条位置
-        mMainMusicViewModel.currentPosition.observe(viewLifecycleOwner) { position ->
-            // 避免拖动时进度条闪烁（仅在非拖动状态下更新）
-            if (!progressBar.isDragging) {
-                progressBar.progress = position
-            }
-        }
-
-        // 3. 监听进度条拖动事件，更新播放位置
-        progressBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
-                // 仅处理用户拖动的情况
-                if (fromUser) {
-                    mMainMusicViewModel.seekTo(progress)
-                }
-            }
-
-            override fun onStartTrackingTouch(seekBar: SeekBar) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar) {}
-        })
-
-        // 4. 监听播放状态，控制进度条交互
-        mMainMusicViewModel.isPlaying.observe(viewLifecycleOwner) { isPlaying ->
-            if (isPlaying) {
-                mMainMusicViewModel.resumeMusic() // 继续播放
-            } else {
-                mMainMusicViewModel.pauseMusic() // 暂停播放
-            }
-        }
-    }
 
     private fun setupMusicList() {
         // 监听歌单数据变化（首次加载/更新时触发）
         mMainMusicViewModel.playlist.observe(viewLifecycleOwner) { list ->
             if (list.isNotEmpty()) {
                 musicList = list
-                // 通过适配器的infoList更新数据（触发DiffUtil高效刷新）
                 mMusicRecycleViewAdapter.infoList = list
-                // 滚动到首个item
                 mRecyclerView.scrollToPosition(0)
-                // 初始选中第一首歌
-                mMainMusicViewModel.setCurrentMusicId(list.first().songId.toString())
+
+                // 设置当前播放ID
+                val firstMusic = list.first()
+                mMainMusicViewModel.setCurrentMusicId(firstMusic.songId.toString())
+                // 主动播放第一首歌（解决启动无音乐问题）
+                if(firstMusic.isVideo==false){
+                    mMainMusicViewModel.playMusic(firstMusic)
+                }else{
+                    //处理播放视频逻辑
+                }
             }
         }
 
@@ -96,9 +92,27 @@ class MainMusicFragment : BaseMusicFragment() {
             Log.d("MainMusicFragment", "当前播放歌曲ID → $currentId")
             // 可在此处更新当前选中项的UI（如高亮显示）
         }
-
         // 初始加载歌单数据
         mMainMusicViewModel.setPlayListDefault()
+
+
+        // 监听播放进度变化，更新当前显示项的进度条
+        mMainMusicViewModel.currentProgressPercent.observe(viewLifecycleOwner) { percent ->
+            val currentPosition = getCurrentPlayingPosition()
+            if (currentPosition != -1) {
+                mMusicRecycleViewAdapter.updateItemProgress(
+                    currentPosition,
+                    percent,
+                    mMainMusicViewModel.formattedCurrentTime.value ?: "00:00"
+                )
+            }
+        }
+    }
+
+    // 获取当前播放歌曲的位置
+    private fun getCurrentPlayingPosition(): Int {
+        val currentId = mMainMusicViewModel.currentMusicId.value ?: return -1
+        return musicList.indexOfFirst { it.songId.toString() == currentId }
     }
 
     private fun setupRecyclerView() {
@@ -107,40 +121,65 @@ class MainMusicFragment : BaseMusicFragment() {
         mRecyclerView.layoutManager = layoutManager
 
         // 初始化适配器（初始数据为空列表）
-        mMusicRecycleViewAdapter = MusicRecycleViewAdapter(musicList)
+//        mMusicRecycleViewAdapter = MusicRecycleViewAdapter(musicList)
+        mMusicRecycleViewAdapter = MusicRecycleViewAdapter(mMainMusicViewModel, musicList)
+
         mRecyclerView.adapter = mMusicRecycleViewAdapter
+        // 将RecyclerView实例传递给适配器
+        // 观察缓冲进度并传递给 Adapter
+        mMainMusicViewModel.bufferProgress.observe(viewLifecycleOwner) { percent ->
+            Log.d("BufferProgress", "Fragment接收到缓冲进度: $percent")
+            mMusicRecycleViewAdapter.updateBufferProgress(percent)
+        }
+        mMusicRecycleViewAdapter.setRecyclerView(mRecyclerView)
+
+
+        // 设置进度更新监听
+        mMusicRecycleViewAdapter.setOnPlayProgressListener(object : MusicRecycleViewAdapter.OnPlayProgressListener {
+            override fun onProgressUpdate(position: Int, progress: Int, currentTime: String, totalTime: String) {
+                // 用户拖动进度条时，更新ViewModel
+                val musicInfo = musicList[position]
+                mMainMusicViewModel.setCurrentMusicId(musicInfo.songId.toString())
+                mMainMusicViewModel.seekToPercent(progress)
+            }
+        })
 
         // 设置PagerSnapHelper实现整页滚动效果
         val snapHelper = PagerSnapHelper()
         snapHelper.attachToRecyclerView(mRecyclerView)
 
-        // 设置列表项点击事件
-//        mMusicRecycleViewAdapter.setOnItemClickListener { musicInfo ->
-//            Log.d("MainMusicFragment", "点击了歌曲 → ${musicInfo.title}")
-//            // 点击时更新当前播放歌曲ID
-//            mMainMusicViewModel.setCurrentMusicId(musicInfo.songId.toString())
-//            // 此处可添加播放逻辑（如启动播放、更新播放状态等）
-//            mMainMusicViewModel.setPlayingState(true)
-//        }
 
-        // 监听滚动事件，配合ViewModel处理页面切换  获取当前显示的item并播放对应歌曲
+        // 监听滚动事件，确保切换到新页面时播放对应歌曲
         mRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                 super.onScrollStateChanged(recyclerView, newState)
-                // 滚动停止时处理页面切换逻辑
+
                 if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-//                    mMainMusicViewModel.handlePageSwitch(recyclerView, layoutManager)
-                    // 通过snapHelper获取当前居中的item视图
+                    // 获取当前居中的item位置
                     val snapView = snapHelper.findSnapView(layoutManager) ?: return
-                    //  获取该视图对应的位置
-                    val currentPosition = layoutManager.getPosition(snapView)
-                    // 校验位置合法性
-                    if (currentPosition in musicList.indices) {
-                        val currentMusic = musicList[currentPosition]
-                        val currentId = currentMusic.songId.toString()
-                        // 更新ViewModel的当前播放ID并触发播放
-                        mMainMusicViewModel.setCurrentMusicId(currentId)
-                        mMainMusicViewModel.playMusic(currentMusic) // 新增：播放当前歌曲
+                    val newCenterPosition = layoutManager.getPosition(snapView)
+
+                    // 检查是否真的切换到了新页面
+                    if (newCenterPosition != currentCenterPosition && newCenterPosition in musicList.indices) {
+                        val newMusic = musicList[newCenterPosition]
+                        // 更新当前中心位置
+                        currentCenterPosition = newCenterPosition
+                        if(newMusic.isVideo==false){
+                            //播放音乐
+                            // 只有当新页面的歌曲ID与当前播放的不同时才切换播放
+                            if (newMusic.songId.toString() != currentPlayingSongId) {
+                                // 暂停当前播放
+                                mMainMusicViewModel.pauseMusic()
+                                // 播放新歌曲
+                                mMainMusicViewModel.setCurrentMusicId(newMusic.songId.toString())
+                                mMainMusicViewModel.playMusic(newMusic)
+                                // 更新当前播放ID
+                                currentPlayingSongId = newMusic.songId.toString()
+                            }
+                        }else{
+                            //处理播放视频
+                        }
+
                     }
                 }
             }
@@ -159,10 +198,21 @@ class MainMusicFragment : BaseMusicFragment() {
                 // 处理点赞状态变化
                 musicList[position].let {
                     Log.d("MainMusicFragment", "点赞状态变化 → ${it.title}: $isLiked")
-                    // 可在此处更新歌曲的点赞数
+                    // 可在此处更新歌曲的点赞数  !@#
                 }
             }
         })
+    }
+    // 播放音乐时更新状态
+    private fun playMusic() {
+        mMainMusicViewModel.setPlaying(true) // 调用 ViewModel 方法更新状态
+        // 其他播放逻辑...
+    }
+
+    // 暂停音乐时更新状态
+    private fun pauseMusic() {
+        mMainMusicViewModel.setPlaying(false)
+        // 其他暂停逻辑...
     }
 
     override fun setListener() {
@@ -173,15 +223,4 @@ class MainMusicFragment : BaseMusicFragment() {
         // 额外初始化数据（如本地缓存读取等）
     }
 
-    // 补充ViewModel中缺失的方法（如果编译报错，需在MainMusicViewModel中添加）
-    // 注意：以下方法应在MainMusicViewModel中实现
-    /*
-    fun setCurrentMusicId(id: String) {
-        _currentMusicId.value = id
-    }
-
-    fun setPlayingState(isPlaying: Boolean) {
-        _isPlaying.value = isPlaying
-    }
-    */
 }

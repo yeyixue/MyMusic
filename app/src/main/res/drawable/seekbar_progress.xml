@@ -4,13 +4,12 @@
         android:top="18dp" android:bottom="18dp"> <!-- 内缩，居中滑块 -->
         <shape android:shape="rectangle">
             <size android:height="4dp"/>
-            <solid android:color="#88898989"/>
+            <solid android:color="#88efefef"/>
 <!--            把这个矩形的四个角都“切一小块”，每个角是一个 半径为 20dp 的圆角。-->
 <!--            高度是 4dp，所以最大有效圆角是 2dp,设置 20dp 其实是多余的，系统自动“裁掉多余的部分”，最多只显示出 2dp 的圆弧；-->
             <corners android:radius="20dp"/>
         </shape>
     </item>
-
 
     <!-- 缓冲轨道（预加载进度） -->
     <item android:id="@android:id/secondaryProgress"
@@ -18,7 +17,7 @@
         <clip>
             <shape android:shape="rectangle">
                 <size android:height="4dp"/>
-                <solid android:color="#88CCCCCC"/>
+                <solid android:color="#88eae7e2"/>
                 <corners android:radius="20dp"/>
             </shape>
         </clip>

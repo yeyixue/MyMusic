@@ -21,10 +21,10 @@ class AutoScrollTextView(context: Context, attrs: AttributeSet? = null) : androi
         focusable = View.FOCUSABLE
     }
 
-    // 强制获取焦点
+    // 强制获取焦点 无论何时都认为它处于焦点状态
     override fun isFocused(): Boolean = true
 
-    // 控制开始滚动的时机
+    // 控制开始滚动的时机 防止控件还没显示就调用 requestFocus() 而失效
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         // 延迟启动，确保布局完成

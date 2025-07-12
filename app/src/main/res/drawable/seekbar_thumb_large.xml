@@ -3,8 +3,8 @@
     android:shape="oval">
 
     <size
-        android:width="15dp"
-        android:height="15dp" /> <!-- 固定大小、正圆 -->
+        android:width="16dp"
+        android:height="16dp" /> <!-- 固定大小、正圆 -->
 
     <solid android:color="#FFFFFF" /> <!-- 纯白色滑块 -->
 

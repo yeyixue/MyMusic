@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
 }
+val SERVER_IP: String by project
 
 android {
     namespace = "com.example.mymusic"
@@ -13,6 +14,7 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
+        buildConfigField("String", "SERVER_IP", "\"${SERVER_IP}\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -38,6 +40,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
@@ -48,6 +51,7 @@ android {
         }
     }
 }
+
 
 dependencies {
     // Lifecycle ViewModel + LiveData
@@ -86,6 +90,10 @@ dependencies {
     implementation("com.squareup.retrofit2:adapter-rxjava3:2.9.0")
     // 添加 RxAndroid 库（提供 Android 主线程调度器）
     implementation("io.reactivex.rxjava3:rxandroid:3.0.2")
+
+    implementation("androidx.media3:media3-exoplayer:1.3.1")
+    implementation("androidx.media3:media3-ui:1.3.1")
+
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
