@@ -289,6 +289,9 @@ class MainMusicFragment : BaseMusicFragment() {
             currentCenterPosition = position
             mMainMusicViewModel.setCurrentMusicId(currentMusic.songId.toString())
 
+            // 标记当前播放的是视频
+            mMainMusicViewModel.startVideoPlayback()
+
             // 开始监听进度
             mMainMusicViewModel.startProgressUpdates()
         }

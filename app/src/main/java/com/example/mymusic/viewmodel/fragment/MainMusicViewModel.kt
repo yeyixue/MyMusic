@@ -96,16 +96,16 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     // 切换播放状态
-    fun togglePlaying() {
-        val current = _isPlaying.value ?: false
-        _isPlaying.value = !current
-
-        // 控制实际的音乐播放
-        if (_isPlaying.value == true) mediaPlayer.start()
-        else mediaPlayer.pause()
-
-        Log.d("MainMusicViewModel", "Toggle playing to: ${_isPlaying.value}")
-    }
+//    fun togglePlaying() {
+//        val current = _isPlaying.value ?: false
+//        _isPlaying.value = !current
+//
+//        // 控制实际的音乐播放
+//        if (_isPlaying.value == true) mediaPlayer.start()
+//        else mediaPlayer.pause()
+//
+//        Log.d("MainMusicViewModel", "Toggle playing to: ${_isPlaying.value}")
+//    }
     // 传递名称字符串
     fun generateRandomBgName() {
         val randomIndex = Random.nextInt(0, 5)
@@ -141,6 +141,8 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
             mediaPlayer.prepareAsync()
             mediaPlayer.setOnPreparedListener {
                 isMediaPrepared = true
+                // 标记当前播放的是音乐
+                isPlayingVideo = false
                 // 新歌曲总时长
                 val duration = mediaPlayer.duration
                 _totalDuration.value = duration
@@ -275,7 +277,6 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
     // 获取音频地址（模拟）
     private fun getAudioUrlBySongId(songId: Int): String {
         // 实际项目替换为真实接口返回的音频URL
-        val ip = BuildConfig.SERVER_IP
         return "http://${RetrofitConnection.ip}:8000/audio/$songId.mp3"
     }
 
@@ -306,7 +307,8 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
      */
     // 播放进度LiveData，Pair的第一个值是当前位置(ms)，第二个值是总时长(ms)
     val progressLiveData = MutableLiveData<Pair<Long, Long>>()
-
+    // 新增：标记当前是否在播放视频（默认播放音乐）
+    private var isPlayingVideo = false
     lateinit var sharedPlayer: ExoPlayer
 
     fun initPlayer(context: Context) {
@@ -322,7 +324,42 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
             })
         }
     }
+    // 切换播放状态（统一控制：音乐/视频）
+    fun togglePlaying() {
+        val currentState = _isPlaying.value ?: false
+        _isPlaying.value = !currentState // 切换状态
 
+        if (currentState) {
+            // 当前是播放状态 → 暂停
+            if (isPlayingVideo) {
+                pauseVideo() // 暂停视频
+            } else {
+                pauseMusic() // 暂停音乐
+            }
+        } else {
+            // 当前是暂停状态 → 继续播放
+            if (isPlayingVideo) {
+                resumeVideo() // 继续视频
+            } else {
+                resumeMusic() // 继续音乐
+            }
+        }
+    }
+
+
+    // 继续播放视频
+    fun resumeVideo() {
+        if (::sharedPlayer.isInitialized && !sharedPlayer.isPlaying) {
+            sharedPlayer.play()
+            _isPlaying.value = true
+        }
+    }
+
+    // 视频开始播放时调用（在Adapter或Fragment播放视频时调用）
+    fun startVideoPlayback() {
+        isPlayingVideo = true // 标记当前播放的是视频
+        _isPlaying.value = true
+    }
 
 
     fun getVideoUrlBySongId(songId: Int): String {
@@ -330,8 +367,10 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
         return "http://$ip:8000/video/$songId.mp4"
     }
     fun pauseVideo() {
-        sharedPlayer.stop()
-        _isPlaying.value = false
+        if (::sharedPlayer.isInitialized && sharedPlayer.isPlaying) {
+            sharedPlayer.pause() // 暂停而非停止，保留播放进度
+            _isPlaying.value = false
+        }
     }
     // 开始监听播放器进度
     fun startProgressUpdates() {

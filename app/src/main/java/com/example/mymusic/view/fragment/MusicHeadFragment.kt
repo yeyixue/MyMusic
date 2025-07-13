@@ -15,6 +15,8 @@ import com.google.android.material.navigation.NavigationBarView
 import androidx.lifecycle.ViewModelProvider
 import androidx.core.view.get
 import androidx.core.view.size
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.Observer
 import com.example.mymusic.adapter.MusicPagerAdapter
 
@@ -60,11 +62,14 @@ class MusicHeadFragment : BaseMusicFragment() {
         mBottNavigationView.selectedItemId = R.id.main // 使用资源ID而不是位置索引
 
         // 监听 currentPlayingSongId 的变化
-        mainMusicFragment?.currentPlayingSongId?.observe(viewLifecycleOwner, Observer { songId ->
-            Log.d("MusicHeadFragment", "当前播放歌曲ID变化 → $songId")
-            mBottNavigationView.menu.findItem(R.id.main).icon = resources.getDrawable(R.mipmap.runing, null)
-        })
-
+//        mainMusicFragment?.currentPlayingSongId?.observe(viewLifecycleOwner, Observer { songId ->
+//            Log.d("MusicHeadFragment", "当前播放歌曲ID变化 → $songId")
+//            mBottNavigationView.menu.findItem(R.id.main).icon = resources.getDrawable(R.mipmap.runing, null)
+//        })
+        // 监听播放状态变化，通过回调传递状态给 updatePlayIcon--在下面的onViewCreated里面使用
+//        mainMusicFragment?.mMainMusicViewModel?.isPlaying?.observe(viewLifecycleOwner) { isPlaying ->
+//            mMusicHeadViewModel.updatePlayIcon(mBottNavigationView.menu.findItem(R.id.main), isPlaying,resources)
+//        }
 
     }
 
@@ -152,7 +157,7 @@ class MusicHeadFragment : BaseMusicFragment() {
         //当mainMusicFragment处于 detached 状态时，访问其 ViewModel 就会触发异常。
         //在访问 Fragment 的 ViewModel 之前，先检查它是否处于活动状态：
         super.onResume()
-        // 更新音乐状态
+        // 更新音乐状态initView
         val isPlaying = if (mainMusicFragment?.isAdded == true) {
             mainMusicFragment?.mMainMusicViewModel?.isPlaying?.value ?: false
         } else {
@@ -161,6 +166,35 @@ class MusicHeadFragment : BaseMusicFragment() {
         mMusicHeadViewModel.updatePlayIcon(mBottNavigationView.menu.findItem(R.id.main), isPlaying, resources)
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        // 延迟到View创建后，检查MainMusicFragment是否已附加
+        checkAndObserveMainMusicViewModel()
+    }
+
+
+    // 检查MainMusicFragment是否已附加，再观察ViewModel
+    private fun checkAndObserveMainMusicViewModel() {
+        // 监听mainMusicFragment的添加状态
+        viewLifecycleOwner.lifecycle.addObserver(LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                // 确保MainMusicFragment已被添加到Activity
+                if (mainMusicFragment?.isAdded == true) {
+                    // 此时可以安全访问ViewModel
+                    mainMusicFragment?.mMainMusicViewModel?.isPlaying?.observe(viewLifecycleOwner) { isPlaying ->
+                        mMusicHeadViewModel.updatePlayIcon(
+                            mBottNavigationView.menu.findItem(R.id.main),
+                            isPlaying,
+                            resources
+                        )
+                    }
+                } else {
+                    // 未添加则延迟重试（最多重试3次，避免无限循环）
+                    viewPager2.postDelayed({ checkAndObserveMainMusicViewModel() }, 300)
+                }
+            }
+        })
+    }
 
     override fun onDestroy() {
         super.onDestroy()
