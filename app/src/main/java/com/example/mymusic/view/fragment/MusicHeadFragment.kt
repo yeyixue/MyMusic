@@ -15,6 +15,7 @@ import com.google.android.material.navigation.NavigationBarView
 import androidx.lifecycle.ViewModelProvider
 import androidx.core.view.get
 import androidx.core.view.size
+import androidx.lifecycle.Observer
 import com.example.mymusic.adapter.MusicPagerAdapter
 
 class MusicHeadFragment : BaseMusicFragment() {
@@ -57,6 +58,14 @@ class MusicHeadFragment : BaseMusicFragment() {
         mBottNavigationView.menu.findItem(R.id.main).title = ""
         // 正确设置底部导航栏的选中项
         mBottNavigationView.selectedItemId = R.id.main // 使用资源ID而不是位置索引
+
+        // 监听 currentPlayingSongId 的变化
+        mainMusicFragment?.currentPlayingSongId?.observe(viewLifecycleOwner, Observer { songId ->
+            Log.d("MusicHeadFragment", "当前播放歌曲ID变化 → $songId")
+            mBottNavigationView.menu.findItem(R.id.main).icon = resources.getDrawable(R.mipmap.runing, null)
+        })
+
+
     }
 
     override fun setListener() {

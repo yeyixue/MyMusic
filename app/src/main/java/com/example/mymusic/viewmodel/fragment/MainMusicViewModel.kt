@@ -301,6 +301,10 @@ class MainMusicViewModel : ViewModel() {
         val ip = BuildConfig.SERVER_IP
         return "http://$ip:8000/video/$songId.mp4"
     }
+    fun pauseVideo() {
+        // 实际播放器在 ViewHolder 中，所以这里只是更新 isPlaying 状态
+        _isPlaying.value = false
+    }
 
 
 
@@ -333,5 +337,7 @@ class MainMusicViewModel : ViewModel() {
         super.onCleared()
         disposables.clear()
     }
+
+
 
 }

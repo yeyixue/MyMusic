@@ -4,6 +4,8 @@ import android.util.Log
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
@@ -21,7 +23,6 @@ class MainMusicFragment : BaseMusicFragment() {
     val mMainMusicViewModel: MainMusicViewModel by lazy {
         ViewModelProvider(this).get(MainMusicViewModel::class.java)
     }
-
     // 添加静态访问方法
     companion object {
         fun getInstance(): MainMusicFragment {
@@ -32,7 +33,8 @@ class MainMusicFragment : BaseMusicFragment() {
     private lateinit var mRecyclerView: RecyclerView
 
     // 记录当前播放的歌曲ID和中心页面位置
-    private var currentPlayingSongId: String? = null
+    private val _currentPlayingSongId = MutableLiveData<String?>()
+    var currentPlayingSongId: LiveData<String?> = _currentPlayingSongId
     private var currentCenterPosition: Int = -1
 
     // 修正列表声明语法（初始为空列表）
@@ -74,8 +76,13 @@ class MainMusicFragment : BaseMusicFragment() {
                 // 主动播放第一首歌（解决启动无音乐问题）
                 if(firstMusic.isVideo==false){
                     mMainMusicViewModel.playMusic(firstMusic)
+                    _currentPlayingSongId.value = firstMusic.songId.toString() // 更新ID
                 }else{
                     //处理播放视频逻辑
+                    mMainMusicViewModel.setCurrentMusicId(firstMusic.songId.toString())
+                    currentCenterPosition = 0
+                    _currentPlayingSongId.value = firstMusic.songId.toString()
+                    playVideo(0)
                 }
             }
         }
@@ -91,6 +98,7 @@ class MainMusicFragment : BaseMusicFragment() {
         mMainMusicViewModel.currentMusicId.observe(viewLifecycleOwner) { currentId ->
             Log.d("MainMusicFragment", "当前播放歌曲ID → $currentId")
             // 可在此处更新当前选中项的UI（如高亮显示）
+            _currentPlayingSongId.value = currentId
         }
         // 初始加载歌单数据
         mMainMusicViewModel.setPlayListDefault()
@@ -162,24 +170,31 @@ class MainMusicFragment : BaseMusicFragment() {
                     // 检查是否真的切换到了新页面
                     if (newCenterPosition != currentCenterPosition && newCenterPosition in musicList.indices) {
                         val newMusic = musicList[newCenterPosition]
+                        val oldMusic = musicList.getOrNull(currentCenterPosition)
+                        if (oldMusic?.isVideo == true) {
+                            pauseVideo(currentCenterPosition)
+                        }
                         // 更新当前中心位置
                         currentCenterPosition = newCenterPosition
                         if(newMusic.isVideo==false){
                             //播放音乐
                             // 只有当新页面的歌曲ID与当前播放的不同时才切换播放
-                            if (newMusic.songId.toString() != currentPlayingSongId) {
+                            if (newMusic.songId.toString() != _currentPlayingSongId.value) {
                                 // 暂停当前播放
                                 mMainMusicViewModel.pauseMusic()
                                 // 播放新歌曲
                                 mMainMusicViewModel.setCurrentMusicId(newMusic.songId.toString())
                                 mMainMusicViewModel.playMusic(newMusic)
-                                // 更新当前播放ID
-                                currentPlayingSongId = newMusic.songId.toString()
+
                             }
                         }else{
                             //处理播放视频
+                            //这里只是更新 isPlaying 状态
+                            mMainMusicViewModel.pauseVideo()
+                            playVideo(newCenterPosition)
                         }
-
+                        // 更新当前播放ID
+                        _currentPlayingSongId.value = newMusic.songId.toString()
                     }
                 }
             }
@@ -213,6 +228,20 @@ class MainMusicFragment : BaseMusicFragment() {
     private fun pauseMusic() {
         mMainMusicViewModel.setPlaying(false)
         // 其他暂停逻辑...
+    }
+
+    // 播放视频时更新状态
+    private fun playVideo(position: Int) {
+        val viewHolder = mRecyclerView.findViewHolderForAdapterPosition(position) as? MusicRecycleViewAdapter.VideoViewHolder
+        viewHolder?.playVideo()
+    }
+
+    // 暂停视频时更新状态
+    private fun pauseVideo(position: Int) {
+        val viewHolder = mRecyclerView.findViewHolderForAdapterPosition(position) as? MusicRecycleViewAdapter.VideoViewHolder
+        viewHolder?.pauseVideo()
+        // 可以在这里更新ViewModel中的播放状态
+        mMainMusicViewModel.setPlaying(false)
     }
 
     override fun setListener() {

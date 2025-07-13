@@ -457,14 +457,6 @@ class MusicRecycleViewAdapter(
     }
 
 
-
-
-
-
-
-
-
-
     // 视频类型ViewHolder
     inner class VideoViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         // 绑定item_main_video布局中的控件
@@ -481,6 +473,7 @@ class MusicRecycleViewAdapter(
         val itemRootLayout: ConstraintLayout = itemView.findViewById(R.id.itemMainVideo)
         val constraintLayoutClickArea: ConstraintLayout = itemView.findViewById(R.id.constraintLayoutClickArea)
         val playerView: PlayerView = itemView.findViewById(R.id.playerView)
+        val thumbnailImageView: ImageView = itemView.findViewById(R.id.thumbnailImageView)  // 封面页
 
         // 保存动画的 composition（用于获取时长）
         private var heartComposition: LottieComposition? = null
@@ -542,8 +535,10 @@ class MusicRecycleViewAdapter(
                 onSeekComplete = { seekToMillis ->
                     // 进度跳转完成回调
                     onSeekListener?.onSeek(adapterPosition, seekToMillis)
+                    val viewHolder = mRecyclerView?.findViewHolderForAdapterPosition(adapterPosition) as? VideoViewHolder
+                    viewHolder?.seekTo(seekToMillis)
                 },
-                constraintLayoutClickArea=constraintLayoutClickArea
+                constraintLayoutClickArea = constraintLayoutClickArea
             )
 
             // 设置初始进度和时间
@@ -555,25 +550,40 @@ class MusicRecycleViewAdapter(
             /**
              * 视频播放
              */
+            // 播放视频前，先停止之前的视频播放
+            releasePlayer()
             playerView.useController = false
 //            playerView.controllerShowTimeoutMs = 3000
 
             val videoUrl = MainMusicViewModel().getVideoUrlBySongId(musicInfo.songId)
-            player = ExoPlayer.Builder(itemView.context).build().also { exoPlayer ->
-                playerView.player = exoPlayer
-                val mediaItem = MediaItem.fromUri(videoUrl)
-                exoPlayer.setMediaItem(mediaItem)
-                exoPlayer.prepare()
-                exoPlayer.playWhenReady = true
+
+            if (player == null) {
+                player = ExoPlayer.Builder(itemView.context).build().also { exoPlayer ->
+                    playerView.player = exoPlayer
+                    val mediaItem = MediaItem.fromUri(videoUrl)
+                    exoPlayer.setMediaItem(mediaItem)
+                    exoPlayer.prepare()  // 仅 prepare，不设置 playWhenReady
+                    exoPlayer.playWhenReady = false  // 确保初始不播放
+                    exoPlayer.seekTo(0)  // 停在第一帧
+                }
             }
 
-
         }
-
-
         fun releasePlayer() {
+            player?.stop()
             player?.release()
             player = null
+        }
+        fun playVideo() {
+            player?.play()
+        }
+
+        fun pauseVideo() {
+            player?.pause()
+        }
+
+        fun seekTo(millis: Int) {
+            player?.seekTo(millis.toLong())
         }
 
         fun updateLikeStatus(isLiked: Boolean) {
