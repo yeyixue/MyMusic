@@ -150,7 +150,7 @@ class MainMusicFragment : BaseMusicFragment() {
         mMusicRecycleViewAdapter.setRecyclerView(mRecyclerView)
 
 
-        // 设置进度更新监听
+        // 设置进度更新监听,这是adaapter的拖动回调处理逻辑
         mMusicRecycleViewAdapter.setOnPlayProgressListener(object : MusicRecycleViewAdapter.OnPlayProgressListener {
             override fun onProgressUpdate(position: Int, progress: Int, currentTime: String, totalTime: String) {
                 // 用户拖动进度条时，更新ViewModel
@@ -295,7 +295,7 @@ class MainMusicFragment : BaseMusicFragment() {
                 val progressPercent = if (duration > 0) ((currentPosition * 100) / duration).toInt() else 0
                 val formattedTime = formatTime(currentPosition.toInt())
                 viewHolder.updateProgress(progressPercent, formattedTime)
-                Log.d("ProgressUpdate", "更新进度: $progressPercent%，位置: $currentCenterPosition")
+//                Log.d("ProgressUpdate", "更新进度: $progressPercent%，位置: $currentCenterPosition")
             }
         }
     }

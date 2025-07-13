@@ -259,13 +259,39 @@ class MusicRecycleViewAdapter(
             tvCommentCount.text = formatCount(musicInfo.commentCount)
             tvShareCount.text = formatCount(musicInfo.shareCount)
 
-            // 设置总时长 并且设置文字不显示
+            // 1. 设置进度条的文本视图（当前时间、总时间、点击区域）
+            seekBar.setTextViews(tvCurrentTime, tvTotalTime, constraintLayoutClickArea)
+            // 2. 设置总时长（用于进度-时间转换）
             seekBar.setTotalDuration(musicInfo.duration)
-            // 获取缓冲进度
+            // 3. 初始化缓冲进度
             seekBar.setBufferProgress(0)
+
+            // 4. 设置 SmartSeekBar 的核心监听（替代 SeekBarUtils）
+            seekBar.setOnProgressActionListener(object : SmartSeekBar.OnProgressActionListener {
+                // 进度变化时触发（包括拖动过程和自动更新）
+                override fun onProgressChanged(
+                    seekBar: SmartSeekBar,
+                    progress: Int,
+                    timeMs: Int,
+                    formattedTime: String,
+                    fromUser: Boolean
+                ) {
+//                    // 仅处理用户交互导致的进度变化
+//                    if (fromUser) {
+//                        progressListener?.onProgressUpdate(adapterPosition, progress,formattedTime,tvTotalTime.text.toString())
+//                    }
+                }
+                //不需要重写 onStartTrackingTouch和onStopTrackingTouch
+            })
+
+            // 5. 初始化进度和时间显示
+            seekBar.updateMediaProgress(0) // 初始进度0
+            tvCurrentTime.text = "00:00"
             tvTotalTime.text = "/ ${formatTime(musicInfo.duration)}"
             tvCurrentTime.visibility= View.GONE
             tvTotalTime.visibility= View.GONE
+
+
 
             // 设置随机图片
             setRandomSongImage()
@@ -275,32 +301,12 @@ class MusicRecycleViewAdapter(
 
             // 使用通用方法设置点赞动画
             setupLikeAnimation(lottieLike, musicInfo, adapterPosition, onItemActionListener)
-            // 使用通用方法设置进度条
-//            setSeekBarLinstener(seekBar,tvCurrentTime,tvTotalTime,adapterPosition)
-            // 设置高级进度条
-            // 使用工具类设置高级进度条
-            SeekBarUtils.getInstance().setupAdvancedSeekBar(
-                context = itemView.context,
-                seekBar = seekBar,
-                tvCurrentTime = tvCurrentTime,
-                tvTotalTime = tvTotalTime,
-                totalDuration = musicInfo.duration,
-                onProgressChanged = { progress, formattedTime ->
-                    // 进度变化回调
-                    progressListener?.onProgressUpdate(adapterPosition, progress, formattedTime, tvTotalTime.text.toString())
-                },
-                onSeekComplete = { seekToMillis ->
-                    // 进度跳转完成回调
-                    onSeekListener?.onSeek(adapterPosition, seekToMillis)
-                },
-                constraintLayoutClickArea=constraintLayoutClickArea
-            )
+
 
             // 设置初始进度和时间
             SeekBarUtils.getInstance().updateProgress(seekBar, 0, false)
             tvCurrentTime.text = "00:00"
             tvTotalTime.text = SeekBarUtils.getInstance().formatTime(musicInfo.duration)
-
         }
         //处理爱心的点击动画和结束显示
         fun updateBuffer(progress: Int) {
@@ -310,41 +316,6 @@ class MusicRecycleViewAdapter(
     }
 
     // 设置进度条的公共函数
-
-//    private fun setSeekBarLinstener(seekBar: SmartSeekBar, tvCurrentTime: TextView, tvTotalTime: TextView,adapterPosition: Int ){
-//        // 监听进度条拖动事件（完善监听方法）
-//        seekBar.setOnProgressActionListener(object : SmartSeekBar.OnProgressActionListener {
-//            // 1. 用户开始拖动进度条时：显示时间控件
-//            override fun onStartTrackingTouch(seekBar: SmartSeekBar) {
-//                tvCurrentTime.visibility = View.VISIBLE  // 显示当前时间
-//                tvTotalTime.visibility = View.VISIBLE    // 显示总时间
-//            }
-//
-//            // 2. 拖动过程中（实时更新）：更新当前时间文本
-//            override fun onProgressChanged(
-//                seekBar: SmartSeekBar,
-//                progress: Int,
-//                timeMs: Int,
-//                formattedTime: String,
-//                fromUser: Boolean
-//            ) {
-//                if (fromUser) {
-//                    // 用户拖动时，实时更新当前时间文本
-//                    tvCurrentTime.text = formattedTime
-//                    // 通知Fragment更新播放位置
-//                    progressListener?.onProgressUpdate(adapterPosition, progress, formattedTime, tvTotalTime.text.toString())
-//                }
-//            }
-//
-//            // 3. 用户结束拖动时：保持时间控件显示（或根据需求隐藏）
-//            override fun onStopTrackingTouch(seekBar: SmartSeekBar) {
-//                // 这里选择保持显示（常见设计：播放时一直显示时间）
-//                // 若需要隐藏，可设置为：
-//                 tvCurrentTime.visibility = View.GONE
-//                 tvTotalTime.visibility = View.GONE
-//            }
-//        })
-//    }
 
 
     // 设置关注按钮的点击事件处理
@@ -435,7 +406,7 @@ class MusicRecycleViewAdapter(
 
         }
     }
-    // 新增：适配器层的updateItemProgress方法（用于外部调用）
+    // 适配器层的updateItemProgress方法（用于外部调用）
     fun updateItemProgress(position: Int, progress: Int, currentTime: String) {
         if (position < 0 || position >= infoList.size) return // 校验位置合法性
         // 通过RecyclerView获取对应位置的ViewHolder
@@ -518,10 +489,34 @@ class MusicRecycleViewAdapter(
             tvCommentCount.text = formatCount(musicInfo.commentCount)
             tvShareCount.text = formatCount(musicInfo.shareCount)
 
-            // 设置总时长 并且设置文字不显示
+            // 1. 设置进度条的文本视图（当前时间、总时间、点击区域）
+            seekBar.setTextViews(tvCurrentTime, tvTotalTime, constraintLayoutClickArea)
+            // 2. 设置总时长（用于进度-时间转换）
             seekBar.setTotalDuration(musicInfo.duration)
-            // 获取缓冲进度
+            // 3. 初始化缓冲进度
             seekBar.setBufferProgress(0)
+
+            // 4. 设置 SmartSeekBar 的核心监听（替代 SeekBarUtils）
+            seekBar.setOnProgressActionListener(object : SmartSeekBar.OnProgressActionListener {
+                // 进度变化时触发（包括拖动过程和自动更新）
+                override fun onProgressChanged(
+                    seekBar: SmartSeekBar,
+                    progress: Int,
+                    timeMs: Int,
+                    formattedTime: String,
+                    fromUser: Boolean
+                ) {
+//                    // 仅处理用户交互导致的进度变化
+//                    if (fromUser) {
+//                        progressListener?.onProgressUpdate(adapterPosition, progress,formattedTime,tvTotalTime.text.toString())
+//                    }
+                }
+                //不需要重写 onStartTrackingTouch和onStopTrackingTouch
+            })
+
+            // 5. 初始化进度和时间显示
+            seekBar.updateMediaProgress(0) // 初始进度0
+            tvCurrentTime.text = "00:00"
             tvTotalTime.text = "/ ${formatTime(musicInfo.duration)}"
             tvCurrentTime.visibility= View.GONE
             tvTotalTime.visibility= View.GONE
@@ -531,32 +526,6 @@ class MusicRecycleViewAdapter(
 
             // 使用通用方法设置点赞动画
             setupLikeAnimation(lottieLike, musicInfo, adapterPosition, onItemActionListener)
-            // 使用通用方法设置进度条
-//            setSeekBarLinstener(seekBar,tvCurrentTime,tvTotalTime,adapterPosition)
-            // 设置高级进度条
-            // 使用工具类设置高级进度条
-            SeekBarUtils.getInstance().setupAdvancedSeekBar(
-                context = itemView.context,
-                seekBar = seekBar,
-                tvCurrentTime = tvCurrentTime,
-                tvTotalTime = tvTotalTime,
-                totalDuration = musicInfo.duration,
-                onProgressChanged = { progress, formattedTime ->
-                    // 进度变化回调
-                    progressListener?.onProgressUpdate(adapterPosition, progress, formattedTime, tvTotalTime.text.toString())
-                },
-                onSeekComplete = { seekToMillis ->
-                    // 进度跳转完成回调
-                    onSeekListener?.onSeek(adapterPosition, seekToMillis)
-                    viewModel.seekTo(seekToMillis.toLong())
-                },
-                constraintLayoutClickArea = constraintLayoutClickArea
-            )
-
-            // 设置初始进度和时间
-            SeekBarUtils.getInstance().updateProgress(seekBar, 0, false)
-            tvCurrentTime.text = "00:00"
-            tvTotalTime.text = SeekBarUtils.getInstance().formatTime(musicInfo.duration)
 
 
             /**
@@ -630,24 +599,12 @@ class MusicRecycleViewAdapter(
         // 更新进度条显示
         fun updateProgress(progress: Int, formattedTime: String) {
             if (!seekBar.isDragging) { // 避免用户拖动时
-                Log.d("SeekBarUpdate", "进度条更新: $progress%")// 被覆盖
+//                Log.d("SeekBarUpdate", "进度条更新: $progress%")
                 seekBar.updateMediaProgress(progress)
                 tvCurrentTime.text = formattedTime
             }
         }
 
-        // 跳转到指定位置（已经存在，但需要修改）
-        fun seekTo(millis: Int) {
-            viewModel.sharedPlayer.seekTo(millis.toLong())
-        }
-
-        fun releasePlayer() {
-            viewModel.sharedPlayer.stop()
-            viewModel.sharedPlayer.release()
-        }
-        fun playVideo() {
-            viewModel.sharedPlayer.play()
-        }
 
         fun pauseVideo() {
             viewModel.sharedPlayer.pause()

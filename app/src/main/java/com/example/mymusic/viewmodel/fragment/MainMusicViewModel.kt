@@ -12,6 +12,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -88,6 +89,15 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
         mediaPlayer.setOnBufferingUpdateListener { _, percent ->
             Log.d("Music"," mediaPlayer.setOnBufferingUpdateListener 更新缓冲进度是$percent")
             _bufferProgress.postValue(percent)
+        }
+        mediaPlayer.setOnCompletionListener {
+            Log.d("PlayCompletion", "音乐正常播放完成，切到下一首")
+            playNextSong()
+        }
+        // 新增错误监听
+        mediaPlayer.setOnErrorListener { mp, what, extra ->
+            Log.e("PlayError", "音乐播放错误: what=$what, extra=$extra")
+            true // 消费错误，不触发完成监听
         }
     }
     // 添加方法来更新播放状态
@@ -185,20 +195,53 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    // 根据百分比跳转进度（适配SmartSeekBar的0-100进度）
+    // 根据百分比跳转进度（适配SmartSeekBar的0-100进度，统一调用新的seekTo）
     fun seekToPercent(percent: Int) {
-        if (!isMediaPrepared) return
-        val targetMillis = percentToMillis(percent)
-        seekTo(targetMillis)
+        if (isPlayingVideo) {
+            // 视频按百分比跳转
+            if (::sharedPlayer.isInitialized) {
+                val duration = sharedPlayer.duration
+                val targetPosition = (percent * duration / 100f).toLong()
+                seekTo(targetPosition) // 调用统一方法
+            }
+        } else {
+            // 音乐按百分比跳转
+            if (!isMediaPrepared) return
+            val targetMillis = percentToMillis(percent)
+            seekTo(targetMillis.toLong()) // 调用统一方法
+        }
     }
 
-    // 根据毫秒跳转进度（MediaPlayer原生方法）
-    private fun seekTo(millis: Int) {
-        if (millis in 0.._totalDuration.value!!) {
-            mediaPlayer.seekTo(millis)
-            _currentPosition.value = millis
-            _currentProgressPercent.value = millisToPercent(millis)
-            _formattedCurrentTime.value = formatTime(millis)
+    /**
+     * 统一的进度跳转方法（同时支持音乐和视频）
+     * 还需要处理动画逻辑
+     * @param position 目标进度（毫秒，Long类型兼容大时长视频）
+     */
+    fun seekTo(position: Long) {
+        if (isPlayingVideo) {
+            // 视频进度跳转（使用ExoPlayer）
+            if (::sharedPlayer.isInitialized) {
+                // 确保进度在有效范围内（0 <= position <= 总时长）
+                val validPosition = position.coerceIn(0, sharedPlayer.duration)
+                sharedPlayer.seekTo(validPosition)
+                Log.d("SeekTo", "视频跳转至: $validPosition 毫秒")
+            }
+        } else {
+            // 音乐进度跳转（使用MediaPlayer）
+            if (isMediaPrepared) {
+                // 转换为Int（音乐时长通常不超过Int范围，超出则取最大值）
+                val validPosition = position.coerceIn(0, _totalDuration.value?.toLong() ?: 0L).toInt()
+                if (validPosition in 0..(_totalDuration.value ?: 0)) {
+                    mediaPlayer.seekTo(validPosition)
+                    // 同步更新音乐进度相关LiveData
+                    _currentPosition.value = validPosition
+                    _currentProgressPercent.value = millisToPercent(validPosition)
+                    _formattedCurrentTime.value = formatTime(validPosition)
+                    Log.d("SeekTo", "音乐跳转至: $validPosition 毫秒")
+                }
+            } else {
+                Log.w("SeekTo", "音乐播放器未准备完成，无法跳转")
+            }
         }
     }
 
@@ -321,6 +364,12 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
                         playNextSong()
                     }
                 }
+                // 新增错误监听
+                override fun onPlayerError(error: PlaybackException) {
+                    Log.e("PlayError", "视频播放错误: ${error.message}", error)
+                    // 错误时不切歌，可暂停播放
+                    pauseVideo()
+                }
             })
         }
     }
@@ -396,11 +445,11 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     // 跳转到指定位置
-    fun seekTo(position: Long) {
-        if (::sharedPlayer.isInitialized && sharedPlayer.isPlaying) {
-            sharedPlayer.seekTo(position)
-        }
-    }
+//    fun seekTo(position: Long) {
+//        if (::sharedPlayer.isInitialized && sharedPlayer.isPlaying) {
+//            sharedPlayer.seekTo(position)
+//        }
+//    }
 
 
 

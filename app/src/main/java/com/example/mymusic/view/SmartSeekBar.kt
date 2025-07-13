@@ -10,8 +10,11 @@ import android.graphics.drawable.Drawable
 import android.graphics.drawable.LayerDrawable
 import android.util.AttributeSet
 import android.view.MotionEvent
+import android.view.View
 import android.view.ViewTreeObserver.OnGlobalLayoutListener
+import android.widget.TextView
 import androidx.appcompat.widget.AppCompatSeekBar
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.viewpager2.widget.ViewPager2
 import com.example.mymusic.R
@@ -62,6 +65,10 @@ class SmartSeekBar @JvmOverloads constructor(
 
     private var actionListener: OnProgressActionListener? = null
 
+    // 新增文本显示相关变量
+    private var tvCurrentTime: TextView? = null
+    private var tvTotalTime: TextView? = null
+    private var constraintLayoutClickArea: ConstraintLayout? = null
 
     init {
         thumb = thumbNormal
@@ -85,10 +92,10 @@ class SmartSeekBar @JvmOverloads constructor(
         outRect.bottom += touchExpansion
     }
 
-
     // 对外提供API：设置总时长（由Activity调用，用于进度-时间转换）
     fun setTotalDuration(durationMs: Int) {
         this.totalDuration = durationMs
+        tvTotalTime?.text = formatTime(durationMs)
     }
 
     // 对外提供API：更新媒体播放进度（由Activity调用，控件内部处理动画）
@@ -108,9 +115,16 @@ class SmartSeekBar @JvmOverloads constructor(
         this.actionListener = listener
     }
 
+    // 设置文本显示控件
+    fun setTextViews(tvCurrentTime: TextView, tvTotalTime: TextView, constraintLayoutClickArea: ConstraintLayout) {
+        this.tvCurrentTime = tvCurrentTime
+        this.tvTotalTime = tvTotalTime
+        this.constraintLayoutClickArea = constraintLayoutClickArea
+        tvTotalTime.text = formatTime(totalDuration)
+    }
 
     // 进度-时间转换（控件内部处理）
-    private fun progressToTimeMs(progress: Int): Int {
+    fun progressToTimeMs(progress: Int): Int {
         return if (totalDuration <= 0) 0 else (progress * totalDuration / 100).coerceIn(0, totalDuration)
     }
 
@@ -123,7 +137,6 @@ class SmartSeekBar @JvmOverloads constructor(
         return String.format("%02d:%02d", minutes, seconds)
     }
 
-
     // 平滑更新进度（内部动画逻辑）
     private fun smoothSetProgress(progress: Int) {
         progressAnimator?.cancel()
@@ -135,12 +148,12 @@ class SmartSeekBar @JvmOverloads constructor(
                 // 触发回调（包含时间信息）
                 val timeMs = progressToTimeMs(newProgress)
                 actionListener?.onProgressChanged(this@SmartSeekBar, newProgress, timeMs, formatTime(timeMs), false)
+                tvCurrentTime?.text = formatTime(timeMs)
             }
             start()
         }
     }
 
-    // 查找父级 ViewPager
     // 查找父级 ViewPager2
     private fun findParentViewPager2(): ViewPager2? {
         var parent = parent
@@ -186,6 +199,12 @@ class SmartSeekBar @JvmOverloads constructor(
                 thumb = thumbDragging
                 updateLayerInset(insetDragging)
                 actionListener?.onStartTrackingTouch(this)
+
+                // 显示时间控件
+                tvCurrentTime?.visibility = View.VISIBLE
+                tvTotalTime?.visibility = View.VISIBLE
+                constraintLayoutClickArea?.visibility = View.INVISIBLE
+
                 return true
             }
 
@@ -206,6 +225,7 @@ class SmartSeekBar @JvmOverloads constructor(
                     // 触发回调（包含时间信息）
                     val timeMs = progressToTimeMs(newProgress)
                     actionListener?.onProgressChanged(this, newProgress, timeMs, formatTime(timeMs), true)
+                    tvCurrentTime?.text = formatTime(timeMs)
                 }
                 return true
             }
@@ -229,13 +249,18 @@ class SmartSeekBar @JvmOverloads constructor(
                 updateLayerInset(insetNormal)
                 isDragging = false
                 isUserInteracting = false // 标记用户结束交互
+
+                // 隐藏时间控件
+                tvCurrentTime?.visibility = View.GONE
+                tvTotalTime?.visibility = View.GONE
+                constraintLayoutClickArea?.visibility = View.VISIBLE
+
                 return true
             }
         }
 
         return super.onTouchEvent(event)
     }
-
 
     // 辅助方法：更新边距
     private fun updateLayerInset(inset: Int) {
