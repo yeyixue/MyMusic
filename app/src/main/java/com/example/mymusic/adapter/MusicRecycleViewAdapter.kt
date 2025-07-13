@@ -276,10 +276,10 @@ class MusicRecycleViewAdapter(
                     formattedTime: String,
                     fromUser: Boolean
                 ) {
-//                    // 仅处理用户交互导致的进度变化
-//                    if (fromUser) {
-//                        progressListener?.onProgressUpdate(adapterPosition, progress,formattedTime,tvTotalTime.text.toString())
-//                    }
+//                    // 仅处理用户交互导致的进度变化---这个要写 不然没反应
+                    if (fromUser) {
+                        progressListener?.onProgressUpdate(adapterPosition, progress,formattedTime,tvTotalTime.text.toString())
+                    }
                 }
                 //不需要重写 onStartTrackingTouch和onStopTrackingTouch
             })
@@ -292,7 +292,6 @@ class MusicRecycleViewAdapter(
             tvTotalTime.visibility= View.GONE
 
 
-
             // 设置随机图片
             setRandomSongImage()
 
@@ -302,11 +301,6 @@ class MusicRecycleViewAdapter(
             // 使用通用方法设置点赞动画
             setupLikeAnimation(lottieLike, musicInfo, adapterPosition, onItemActionListener)
 
-
-            // 设置初始进度和时间
-            SeekBarUtils.getInstance().updateProgress(seekBar, 0, false)
-            tvCurrentTime.text = "00:00"
-            tvTotalTime.text = SeekBarUtils.getInstance().formatTime(musicInfo.duration)
         }
         //处理爱心的点击动画和结束显示
         fun updateBuffer(progress: Int) {
@@ -506,10 +500,10 @@ class MusicRecycleViewAdapter(
                     formattedTime: String,
                     fromUser: Boolean
                 ) {
-//                    // 仅处理用户交互导致的进度变化
-//                    if (fromUser) {
-//                        progressListener?.onProgressUpdate(adapterPosition, progress,formattedTime,tvTotalTime.text.toString())
-//                    }
+//                    // 仅处理用户交互导致的进度变化---这个要写 不然没反应
+                    if (fromUser) {
+                        progressListener?.onProgressUpdate(adapterPosition, progress,formattedTime,tvTotalTime.text.toString())
+                    }
                 }
                 //不需要重写 onStartTrackingTouch和onStopTrackingTouch
             })
