@@ -1,11 +1,19 @@
 package com.example.mymusic.viewmodel.fragment
 
+import android.app.Application
+import android.content.Context
 import android.media.MediaPlayer
 import android.os.CountDownTimer
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
+import android.view.View
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.media3.common.Player
+import androidx.media3.exoplayer.ExoPlayer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mymusic.BuildConfig
@@ -19,7 +27,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 
-class MainMusicViewModel : ViewModel() {
+class MainMusicViewModel(application: Application) : AndroidViewModel(application) {
 
     private val apiService: ApiService = RetrofitConnection.apiService
 
@@ -296,27 +304,64 @@ class MainMusicViewModel : ViewModel() {
      * 在 Adapter.VideoViewHolder 中调用并播放视频
      * 绑定数据后自动播放视频
      */
+    // 播放进度LiveData，Pair的第一个值是当前位置(ms)，第二个值是总时长(ms)
+    val progressLiveData = MutableLiveData<Pair<Long, Long>>()
+
+    lateinit var sharedPlayer: ExoPlayer
+
+    fun initPlayer(context: Context) {
+        if (!::sharedPlayer.isInitialized) { // 确保只初始化一次
+            sharedPlayer = ExoPlayer.Builder(context).build()
+            // 添加基础监听（如播放完成）
+            sharedPlayer.addListener(object : Player.Listener {
+                override fun onPlaybackStateChanged(state: Int) {
+                    if (state == Player.STATE_ENDED) {
+                        playNextSong()
+                    }
+                }
+            })
+        }
+    }
+
+
 
     fun getVideoUrlBySongId(songId: Int): String {
         val ip = BuildConfig.SERVER_IP
         return "http://$ip:8000/video/$songId.mp4"
     }
     fun pauseVideo() {
-        // 实际播放器在 ViewHolder 中，所以这里只是更新 isPlaying 状态
+        sharedPlayer.stop()
         _isPlaying.value = false
     }
+    // 开始监听播放器进度
+    fun startProgressUpdates() {
+        if (!::sharedPlayer.isInitialized) return
 
+        // 使用Handler定期更新进度
+        val handler = Handler(Looper.getMainLooper())
+        val updateProgressRunnable = object : Runnable {
+            override fun run() {
+                if (sharedPlayer.isPlaying) {
+                    val currentPosition = sharedPlayer.currentPosition
+                    val duration = sharedPlayer.duration
 
+                    // 通过LiveData通知Fragment更新进度条
+                    progressLiveData.postValue(Pair(currentPosition, duration))
+                }
+                handler.postDelayed(this, 1000) // 每秒更新一次
+            }
+        }
 
+        // 开始更新
+        handler.post(updateProgressRunnable)
+    }
 
-
-
-
-
-
-
-
-
+    // 跳转到指定位置
+    fun seekTo(position: Long) {
+        if (::sharedPlayer.isInitialized && sharedPlayer.isPlaying) {
+            sharedPlayer.seekTo(position)
+        }
+    }
 
 
 
@@ -336,6 +381,10 @@ class MainMusicViewModel : ViewModel() {
     override fun onCleared() {
         super.onCleared()
         disposables.clear()
+        // 释放播放器资源
+        if (::sharedPlayer.isInitialized) {
+            sharedPlayer.release()
+        }
     }
 
 

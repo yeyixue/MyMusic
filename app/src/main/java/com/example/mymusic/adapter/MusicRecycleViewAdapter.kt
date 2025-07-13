@@ -12,6 +12,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import androidx.recyclerview.widget.DiffUtil
@@ -20,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.airbnb.lottie.LottieAnimationView
 import com.airbnb.lottie.LottieComposition
 import com.airbnb.lottie.LottieCompositionFactory
+import com.bumptech.glide.Glide
 import com.example.mymusic.R
 import com.example.mymusic.repo.entity.MusicInfo
 import com.example.mymusic.util.SeekBarUtils
@@ -40,6 +42,8 @@ class MusicRecycleViewAdapter(
     private var mRecyclerView: RecyclerView? = null
     // 声明进度跳转监听器（新增）
     private var onSeekListener: OnSeekListener? = null
+    // 当前中心页
+    var currentCenterPosition: Int = 0
     // 提供外部设置RecyclerView的方法（在Fragment中调用）
     fun setRecyclerView(recyclerView: RecyclerView) {
         this.mRecyclerView = recyclerView
@@ -130,6 +134,7 @@ class MusicRecycleViewAdapter(
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val musicInfo = infoList[position]
         val bgResId = getRandomBgResId(holder.itemView.context, position)
+        val isCurrent = position == currentCenterPosition
         when (holder) {
             is MusicViewHolder -> {
                 holder.bind(musicInfo)
@@ -137,7 +142,7 @@ class MusicRecycleViewAdapter(
 
             }
             is VideoViewHolder -> {
-                holder.bind(musicInfo)
+                holder.bind(musicInfo, isCurrent)
                 holder.itemRootLayout.setBackgroundResource(bgResId)
             }
         }
@@ -477,11 +482,11 @@ class MusicRecycleViewAdapter(
 
         // 保存动画的 composition（用于获取时长）
         private var heartComposition: LottieComposition? = null
+        var firstFrameRendered = false
 
-        private var player: ExoPlayer? = null
 
 
-        fun bind(musicInfo: MusicInfo) {
+        fun bind(musicInfo: MusicInfo,isCurrent: Boolean) {
             tvTitle.text = musicInfo.title
             tvSinger.text = musicInfo.singer
             tvFollow.text = if (musicInfo.followed) "已关注" else "关注"
@@ -535,8 +540,7 @@ class MusicRecycleViewAdapter(
                 onSeekComplete = { seekToMillis ->
                     // 进度跳转完成回调
                     onSeekListener?.onSeek(adapterPosition, seekToMillis)
-                    val viewHolder = mRecyclerView?.findViewHolderForAdapterPosition(adapterPosition) as? VideoViewHolder
-                    viewHolder?.seekTo(seekToMillis)
+                    viewModel.seekTo(seekToMillis.toLong())
                 },
                 constraintLayoutClickArea = constraintLayoutClickArea
             )
@@ -550,41 +554,92 @@ class MusicRecycleViewAdapter(
             /**
              * 视频播放
              */
-            // 播放视频前，先停止之前的视频播放
-            releasePlayer()
             playerView.useController = false
-//            playerView.controllerShowTimeoutMs = 3000
+            val videoUrl = viewModel.getVideoUrlBySongId(musicInfo.songId)
 
-            val videoUrl = MainMusicViewModel().getVideoUrlBySongId(musicInfo.songId)
+            // 重置播放器状态
+            if(!isCurrent){
+                // 加载视频封面
+                Glide.with(itemView.context)
+                    .asBitmap()
+                    .load(videoUrl)
+                    .frame(0) // 加载第0毫秒的帧作为封面图
+                    .into(thumbnailImageView)
+            }
 
-            if (player == null) {
-                player = ExoPlayer.Builder(itemView.context).build().also { exoPlayer ->
-                    playerView.player = exoPlayer
-                    val mediaItem = MediaItem.fromUri(videoUrl)
-                    exoPlayer.setMediaItem(mediaItem)
-                    exoPlayer.prepare()  // 仅 prepare，不设置 playWhenReady
-                    exoPlayer.playWhenReady = false  // 确保初始不播放
-                    exoPlayer.seekTo(0)  // 停在第一帧
-                }
+            if (isCurrent) {
+                // 当前页：显示播放器
+                thumbnailImageView.visibility = View.GONE
+                playerView.visibility = View.VISIBLE
+
+                playerView.player = viewModel.sharedPlayer
+
+                val mediaItem = MediaItem.fromUri(videoUrl)
+                viewModel.sharedPlayer.setMediaItem(mediaItem)
+
+                viewModel.sharedPlayer.addListener(object : Player.Listener {
+                    override fun onRenderedFirstFrame() {
+                        if (!firstFrameRendered) {
+                            thumbnailImageView.visibility = View.GONE  // 第一帧显示后隐藏封面
+                            firstFrameRendered = true
+                        }
+                    }
+                })
+                viewModel.sharedPlayer.addListener(object : Player.Listener {
+                    override fun onPlaybackStateChanged(state: Int) {
+                        if (state == Player.STATE_READY) {
+                            val duration = viewModel.sharedPlayer.duration
+                            Log.d("MyMusic", "视频时长：${duration}毫秒") // 检查是否正常
+                            thumbnailImageView.visibility = View.GONE
+                            Log.d("MyMusic", "关闭封面") // 检查是否正常
+                        }
+                        if(state==Player.STATE_ENDED){
+                            //播放器已播放到媒体的末尾。
+                        }
+                        if(state==Player.STATE_BUFFERING){
+                            //播放器正在缓冲数据。
+                            Log.d("MyMusic", "播放器正在缓冲数据") // 检查是否正常
+                        }
+                    }
+                })
+                viewModel.sharedPlayer.prepare()
+                viewModel.sharedPlayer.playWhenReady = true
+            } else {
+                // 非当前页：只显示封面图
+
+                // 清除播放器的媒体项和监听（避免残留）
+//                viewModel.sharedPlayer.clearMediaItems() // 清除旧媒体
+                playerView.player = null // 解绑视图但保留播放器状态
+                thumbnailImageView.visibility = View.VISIBLE
+                playerView.visibility = View.GONE
             }
 
         }
+        // 更新进度条显示
+        fun updateProgress(progress: Int, formattedTime: String) {
+            if (!seekBar.isDragging) { // 避免用户拖动时被覆盖
+                seekBar.updateMediaProgress(progress)
+                tvCurrentTime.text = formattedTime
+            }
+        }
+
+        // 跳转到指定位置（已经存在，但需要修改）
+        fun seekTo(millis: Int) {
+            viewModel.sharedPlayer.seekTo(millis.toLong())
+        }
+
         fun releasePlayer() {
-            player?.stop()
-            player?.release()
-            player = null
+            viewModel.sharedPlayer.stop()
+            viewModel.sharedPlayer.release()
         }
         fun playVideo() {
-            player?.play()
+            viewModel.sharedPlayer.play()
         }
 
         fun pauseVideo() {
-            player?.pause()
+            viewModel.sharedPlayer.pause()
         }
 
-        fun seekTo(millis: Int) {
-            player?.seekTo(millis.toLong())
-        }
 
         fun updateLikeStatus(isLiked: Boolean) {
             if (isLiked) {
@@ -602,7 +657,11 @@ class MusicRecycleViewAdapter(
 
     override fun onViewRecycled(holder: RecyclerView.ViewHolder) {
         if (holder is VideoViewHolder) {
-            holder.releasePlayer()
+            holder.playerView.player = null // 强制解绑
+//            holder.releasePlayer()
+            holder.pauseVideo()
+            Log.d("ViewRecycled", "ViewHolder回收，解绑PlayerView")
+            holder.firstFrameRendered = false // 重置第一帧渲染状态
         }
         super.onViewRecycled(holder)
     }

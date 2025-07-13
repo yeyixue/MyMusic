@@ -1,12 +1,15 @@
 package com.example.mymusic.view.fragment
 
 import android.util.Log
+import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModelProvider
+import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
@@ -31,7 +34,8 @@ class MainMusicFragment : BaseMusicFragment() {
     }
     private lateinit var mMusicRecycleViewAdapter: MusicRecycleViewAdapter
     private lateinit var mRecyclerView: RecyclerView
-
+    // 在 setupRecyclerView() 的滚动监听中添加
+    private var isInitialScroll = true // 新增标记
     // 记录当前播放的歌曲ID和中心页面位置
     private val _currentPlayingSongId = MutableLiveData<String?>()
     var currentPlayingSongId: LiveData<String?> = _currentPlayingSongId
@@ -59,6 +63,9 @@ class MainMusicFragment : BaseMusicFragment() {
         }
 
         setupMusicList()    // 再监听数据变化
+
+        mMainMusicViewModel.initPlayer(requireContext())
+
     }
 
 
@@ -68,21 +75,20 @@ class MainMusicFragment : BaseMusicFragment() {
             if (list.isNotEmpty()) {
                 musicList = list
                 mMusicRecycleViewAdapter.infoList = list
-                mRecyclerView.scrollToPosition(0)
-
-                // 设置当前播放ID
-                val firstMusic = list.first()
-                mMainMusicViewModel.setCurrentMusicId(firstMusic.songId.toString())
-                // 主动播放第一首歌（解决启动无音乐问题）
-                if(firstMusic.isVideo==false){
-                    mMainMusicViewModel.playMusic(firstMusic)
-                    _currentPlayingSongId.value = firstMusic.songId.toString() // 更新ID
-                }else{
-                    //处理播放视频逻辑
+                // 延迟滚动，确保布局测量完成
+                mRecyclerView.post {
+                    mRecyclerView.scrollToPosition(0)
+                    // 初始化第一首播放逻辑...
+                    val firstMusic = list.first()
                     mMainMusicViewModel.setCurrentMusicId(firstMusic.songId.toString())
-                    currentCenterPosition = 0
-                    _currentPlayingSongId.value = firstMusic.songId.toString()
-                    playVideo(0)
+                    if(firstMusic.isVideo==false){
+                        mMainMusicViewModel.playMusic(firstMusic)
+                        _currentPlayingSongId.value = firstMusic.songId.toString()
+                    }else{
+                        currentCenterPosition = 0
+                        _currentPlayingSongId.value = firstMusic.songId.toString()
+                        playVideo(currentCenterPosition)
+                    }
                 }
             }
         }
@@ -163,6 +169,11 @@ class MainMusicFragment : BaseMusicFragment() {
                 super.onScrollStateChanged(recyclerView, newState)
 
                 if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                    // 忽略初始滚动（scrollToPosition(0) 触发的滚动）
+//                    if (isInitialScroll) {
+//                        isInitialScroll = false
+//                        return
+//                    }
                     // 获取当前居中的item位置
                     val snapView = snapHelper.findSnapView(layoutManager) ?: return
                     val newCenterPosition = layoutManager.getPosition(snapView)
@@ -170,9 +181,14 @@ class MainMusicFragment : BaseMusicFragment() {
                     // 检查是否真的切换到了新页面
                     if (newCenterPosition != currentCenterPosition && newCenterPosition in musicList.indices) {
                         val newMusic = musicList[newCenterPosition]
-                        val oldMusic = musicList.getOrNull(currentCenterPosition)
-                        if (oldMusic?.isVideo == true) {
-                            pauseVideo(currentCenterPosition)
+                        // 暂停当前播放（无论是音乐还是视频）
+                        if (currentCenterPosition != -1) {
+                            val currentMusic = musicList[currentCenterPosition]
+                            if (currentMusic.isVideo) {
+                                pauseVideo(currentCenterPosition)
+                            } else {
+                                mMainMusicViewModel.pauseMusic()
+                            }
                         }
                         // 更新当前中心位置
                         currentCenterPosition = newCenterPosition
@@ -190,11 +206,14 @@ class MainMusicFragment : BaseMusicFragment() {
                         }else{
                             //处理播放视频
                             //这里只是更新 isPlaying 状态
-                            mMainMusicViewModel.pauseVideo()
-                            playVideo(newCenterPosition)
+//                            mMainMusicViewModel.pauseVideo()
+                            playVideo(currentCenterPosition)
+
+//                            mMusicRecycleViewAdapter.notifyItemChanged(currentCenterPosition)
                         }
                         // 更新当前播放ID
                         _currentPlayingSongId.value = newMusic.songId.toString()
+                        mMusicRecycleViewAdapter.currentCenterPosition = currentCenterPosition
                     }
                 }
             }
@@ -231,10 +250,49 @@ class MainMusicFragment : BaseMusicFragment() {
     }
 
     // 播放视频时更新状态
+// 修改 MainMusicFragment 的 playVideo 方法
     private fun playVideo(position: Int) {
-        val viewHolder = mRecyclerView.findViewHolderForAdapterPosition(position) as? MusicRecycleViewAdapter.VideoViewHolder
-        viewHolder?.playVideo()
+        mMainMusicViewModel.pauseVideo() // 停止音乐播放
+
+        // 2. 解绑上一个页面的 PlayerView
+        val oldHolder = mRecyclerView.findViewHolderForAdapterPosition(currentCenterPosition)
+        if (oldHolder is MusicRecycleViewAdapter.VideoViewHolder) {
+            oldHolder.playerView.player = null
+            Log.d("PlayVideo", "解绑上一个页面的 PlayerView: $currentCenterPosition")
+        }
+        // 3. 获取当前页面 ViewHolder
+        val viewHolder = mRecyclerView.findViewHolderForAdapterPosition(position)
+        if (viewHolder is MusicRecycleViewAdapter.VideoViewHolder) {
+            // 1. 重置共享播放器状态
+            val player = mMainMusicViewModel.sharedPlayer
+            player.stop() // 停止当前播放
+            player.clearMediaItems() // 清除旧媒体
+//            player.removeAllListeners() // 移除所有旧监听
+
+            // 2. 绑定新页面的 PlayerView
+            viewHolder.playerView.visibility = View.VISIBLE
+            viewHolder.thumbnailImageView.visibility = View.GONE
+            viewHolder.playerView.player = player // 绑定新视图
+
+            // 3. 加载新视频
+            val currentMusic = musicList[position]
+            val videoUrl = mMainMusicViewModel.getVideoUrlBySongId(currentMusic.songId)
+            val mediaItem = MediaItem.fromUri(videoUrl)
+            player.setMediaItem(mediaItem)
+
+
+            // 4. 准备并播放
+            player.prepare()
+            player.playWhenReady = true
+            // 更新当前播放位置
+            currentCenterPosition = position
+            mMainMusicViewModel.setCurrentMusicId(currentMusic.songId.toString())
+
+            // 开始监听进度
+            mMainMusicViewModel.startProgressUpdates()
+        }
     }
+
 
     // 暂停视频时更新状态
     private fun pauseVideo(position: Int) {
@@ -244,6 +302,31 @@ class MainMusicFragment : BaseMusicFragment() {
         mMainMusicViewModel.setPlaying(false)
     }
 
+    // 监听进度更新
+    private fun observeProgressUpdates() {
+        mMainMusicViewModel.progressLiveData.observe(viewLifecycleOwner) { (currentPosition, duration) ->
+            // 获取当前播放的ViewHolder
+            val viewHolder = mRecyclerView.findViewHolderForAdapterPosition(currentCenterPosition)
+            if (viewHolder is MusicRecycleViewAdapter.VideoViewHolder) {
+                // 更新进度条
+                val progressPercent = if (duration > 0) ((currentPosition * 100) / duration).toInt() else 0
+                val formattedTime = formatTime(currentPosition.toInt())
+                viewHolder.updateProgress(progressPercent, formattedTime)
+            }
+        }
+    }
+
+    // 格式化时间辅助方法
+    private fun formatTime(millis: Int): String {
+        val totalSeconds = millis / 1000
+        val minutes = totalSeconds / 60
+        val seconds = totalSeconds % 60
+        return String.format("%02d:%02d", minutes, seconds)
+    }
+
+
+
+
     override fun setListener() {
         // 可添加其他全局监听（如顶部标题栏点击等）
     }
@@ -251,5 +334,28 @@ class MainMusicFragment : BaseMusicFragment() {
     override fun initData() {
         // 额外初始化数据（如本地缓存读取等）
     }
+
+    override fun onResume() {
+        super.onResume()
+        // 恢复播放（如果之前在播放）
+        if (currentCenterPosition != -1) {
+            val currentMusic = musicList[currentCenterPosition]
+            if (currentMusic.isVideo && mMainMusicViewModel.isPlaying.value == true) {
+                playVideo(currentCenterPosition)
+            }
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // 暂停播放（保留状态）
+        if (currentCenterPosition != -1) {
+            val currentMusic = musicList[currentCenterPosition]
+            if (currentMusic.isVideo) {
+                pauseVideo(currentCenterPosition)
+            }
+        }
+    }
+
 
 }
