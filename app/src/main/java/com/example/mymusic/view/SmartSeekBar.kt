@@ -171,6 +171,7 @@ class SmartSeekBar @JvmOverloads constructor(
     // 触摸事件处理（优化用户交互状态管理）
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
+
         if (seekBarWidth <= 0) {
             seekBarWidth = width - paddingLeft - paddingRight
             if (seekBarWidth > 0) {
@@ -181,7 +182,6 @@ class SmartSeekBar @JvmOverloads constructor(
         }
         // 获取父级 ViewPager
         val viewPager2 = findParentViewPager2()
-
         val touchX = event.x - paddingLeft
         val validTouchX = touchX.coerceIn(0f, seekBarWidth.toFloat())
 

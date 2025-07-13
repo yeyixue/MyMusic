@@ -194,7 +194,7 @@ class MainMusicFragment : BaseMusicFragment() {
                             // 只有当新页面的歌曲ID与当前播放的不同时才切换播放
                             if (newMusic.songId.toString() != _currentPlayingSongId.value) {
                                 // 暂停当前播放
-                                mMainMusicViewModel.pauseMusic()
+//                                mMainMusicViewModel.pauseMusic()
                                 // 播放新歌曲
                                 mMainMusicViewModel.setCurrentMusicId(newMusic.songId.toString())
                                 mMainMusicViewModel.playMusic(newMusic)

@@ -82,9 +82,6 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
 
     // 初始化播放器时，确保播放完成监听正确绑定
     init {
-        mediaPlayer.setOnCompletionListener {
-            playNextSong() // 播放完成后自动触发下一首
-        }
         // 设置缓冲监听
         mediaPlayer.setOnBufferingUpdateListener { _, percent ->
             Log.d("Music"," mediaPlayer.setOnBufferingUpdateListener 更新缓冲进度是$percent")
@@ -105,17 +102,7 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
         _isPlaying.value = playing
     }
 
-    // 切换播放状态
-//    fun togglePlaying() {
-//        val current = _isPlaying.value ?: false
-//        _isPlaying.value = !current
-//
-//        // 控制实际的音乐播放
-//        if (_isPlaying.value == true) mediaPlayer.start()
-//        else mediaPlayer.pause()
-//
-//        Log.d("MainMusicViewModel", "Toggle playing to: ${_isPlaying.value}")
-//    }
+
     // 传递名称字符串
     fun generateRandomBgName() {
         val randomIndex = Random.nextInt(0, 5)
