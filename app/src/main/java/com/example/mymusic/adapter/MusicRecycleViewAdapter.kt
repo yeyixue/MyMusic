@@ -414,6 +414,14 @@ class MusicRecycleViewAdapter(
                 currentTime = currentTime,
                 isDragging = viewHolder.seekBar.isDragging
             )
+        }else if(viewHolder is VideoViewHolder){
+            updateProgress(
+                seekBar = viewHolder.seekBar,
+                tvCurrentTime = viewHolder.tvCurrentTime,
+                progress = progress,
+                currentTime = currentTime,
+                isDragging = viewHolder.seekBar.isDragging
+            )
         }
     }
 
@@ -591,13 +599,13 @@ class MusicRecycleViewAdapter(
 
         }
         // 更新进度条显示
-        fun updateProgress(progress: Int, formattedTime: String) {
-            if (!seekBar.isDragging) { // 避免用户拖动时
-//                Log.d("SeekBarUpdate", "进度条更新: $progress%")
-                seekBar.updateMediaProgress(progress)
-                tvCurrentTime.text = formattedTime
-            }
-        }
+//        fun updateProgress(progress: Int, formattedTime: String) {
+//            if (!seekBar.isDragging) { // 避免用户拖动时
+////                Log.d("SeekBarUpdate", "进度条更新: $progress%")
+//                seekBar.updateMediaProgress(progress)
+//                tvCurrentTime.text = formattedTime
+//            }
+//        }
 
 
         fun pauseVideo() {

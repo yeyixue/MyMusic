@@ -288,15 +288,24 @@ class MainMusicFragment : BaseMusicFragment() {
                 Log.d("ProgressUpdate", "无效时长: $duration")
                 return@observe
             }
+            val progressPercent = if (duration > 0) ((currentPosition * 100) / duration).toInt() else 0
+            val formattedTime = formatTime(currentPosition.toInt())
+            val currentPlayingPosition = mMusicRecycleViewAdapter.currentCenterPosition
+            mMusicRecycleViewAdapter.updateItemProgress(
+                currentPlayingPosition,
+                progressPercent,
+                formattedTime
+            )
+
             // 获取当前播放的ViewHolder
-            val viewHolder = mRecyclerView.findViewHolderForAdapterPosition(currentCenterPosition)
-            if (viewHolder is MusicRecycleViewAdapter.VideoViewHolder) {
-                // 更新进度条
-                val progressPercent = if (duration > 0) ((currentPosition * 100) / duration).toInt() else 0
-                val formattedTime = formatTime(currentPosition.toInt())
-                viewHolder.updateProgress(progressPercent, formattedTime)
-//                Log.d("ProgressUpdate", "更新进度: $progressPercent%，位置: $currentCenterPosition")
-            }
+//            val viewHolder = mRecyclerView.findViewHolderForAdapterPosition(currentCenterPosition)
+//            if (viewHolder is MusicRecycleViewAdapter.VideoViewHolder) {
+//                // 更新进度条
+//                val progressPercent = if (duration > 0) ((currentPosition * 100) / duration).toInt() else 0
+//                val formattedTime = formatTime(currentPosition.toInt())
+//                viewHolder.updateProgress(progressPercent, formattedTime)
+////                Log.d("ProgressUpdate", "更新进度: $progressPercent%，位置: $currentCenterPosition")
+//            }
         }
     }
 
