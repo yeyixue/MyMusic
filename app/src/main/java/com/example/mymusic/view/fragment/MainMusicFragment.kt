@@ -19,6 +19,7 @@ import com.example.mymusic.repo.entity.MusicInfo
 import com.example.mymusic.view.SmartSeekBar
 import com.example.mymusic.viewmodel.fragment.MainMusicViewModel
 
+
 class MainMusicFragment : BaseMusicFragment() {
 //    internal lateinit var mMainMusicViewModel: MainMusicViewModel
 
@@ -337,24 +338,18 @@ class MainMusicFragment : BaseMusicFragment() {
 
     override fun onResume() {
         super.onResume()
-        // 恢复播放（如果之前在播放）
-        if (currentCenterPosition != -1) {
-            val currentMusic = musicList[currentCenterPosition]
-            if (currentMusic.isVideo && mMainMusicViewModel.isPlaying.value == true) {
-                playVideo(currentCenterPosition)
-            }
-        }
+
     }
 
     override fun onPause() {
         super.onPause()
-        // 暂停播放（保留状态）
-        if (currentCenterPosition != -1) {
-            val currentMusic = musicList[currentCenterPosition]
-            if (currentMusic.isVideo) {
-                pauseVideo(currentCenterPosition)
-            }
-        }
+        // 切换到别的页面-》暂停播放（保留状态）--一直播放
+//        if (currentCenterPosition != -1) {
+//            val currentMusic = musicList[currentCenterPosition]
+//            if (currentMusic.isVideo) {
+//                pauseVideo(currentCenterPosition)
+//            }
+//        }
     }
 
 
