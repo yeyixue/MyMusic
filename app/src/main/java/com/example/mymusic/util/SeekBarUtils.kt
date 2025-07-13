@@ -1,6 +1,7 @@
 package com.example.mymusic.util
 
 import android.animation.ValueAnimator
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.drawable.LayerDrawable
 import android.view.MotionEvent
@@ -32,6 +33,7 @@ class SeekBarUtils private constructor() {
     }
 
     // 设置高级进度条功能（包含平滑滑动、缩放效果和预加载）
+    @SuppressLint("ClickableViewAccessibility")
     fun setupAdvancedSeekBar(
         context: Context,
         seekBar: SeekBar,

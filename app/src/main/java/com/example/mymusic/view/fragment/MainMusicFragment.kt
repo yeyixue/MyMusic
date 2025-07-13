@@ -66,7 +66,8 @@ class MainMusicFragment : BaseMusicFragment() {
         setupMusicList()    // 再监听数据变化
 
         mMainMusicViewModel.initPlayer(requireContext())
-
+        // 启动进度监听（关键：在此处调用，确保视图和数据已准备好）
+        observeProgressUpdates()
     }
 
 
@@ -170,11 +171,6 @@ class MainMusicFragment : BaseMusicFragment() {
                 super.onScrollStateChanged(recyclerView, newState)
 
                 if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                    // 忽略初始滚动（scrollToPosition(0) 触发的滚动）
-//                    if (isInitialScroll) {
-//                        isInitialScroll = false
-//                        return
-//                    }
                     // 获取当前居中的item位置
                     val snapView = snapHelper.findSnapView(layoutManager) ?: return
                     val newCenterPosition = layoutManager.getPosition(snapView)
@@ -186,7 +182,7 @@ class MainMusicFragment : BaseMusicFragment() {
                         if (currentCenterPosition != -1) {
                             val currentMusic = musicList[currentCenterPosition]
                             if (currentMusic.isVideo) {
-                                pauseVideo(currentCenterPosition)
+                                mMainMusicViewModel.pauseVideo()
                             } else {
                                 mMainMusicViewModel.pauseMusic()
                             }
@@ -206,11 +202,8 @@ class MainMusicFragment : BaseMusicFragment() {
                             }
                         }else{
                             //处理播放视频
-                            //这里只是更新 isPlaying 状态
 //                            mMainMusicViewModel.pauseVideo()
                             playVideo(currentCenterPosition)
-
-//                            mMusicRecycleViewAdapter.notifyItemChanged(currentCenterPosition)
                         }
                         // 更新当前播放ID
                         _currentPlayingSongId.value = newMusic.songId.toString()
@@ -238,20 +231,9 @@ class MainMusicFragment : BaseMusicFragment() {
             }
         })
     }
-    // 播放音乐时更新状态
-    private fun playMusic() {
-        mMainMusicViewModel.setPlaying(true) // 调用 ViewModel 方法更新状态
-        // 其他播放逻辑...
-    }
 
-    // 暂停音乐时更新状态
-    private fun pauseMusic() {
-        mMainMusicViewModel.setPlaying(false)
-        // 其他暂停逻辑...
-    }
 
     // 播放视频时更新状态
-// 修改 MainMusicFragment 的 playVideo 方法
     private fun playVideo(position: Int) {
         mMainMusicViewModel.pauseVideo() // 停止音乐播放
 
@@ -298,17 +280,14 @@ class MainMusicFragment : BaseMusicFragment() {
     }
 
 
-    // 暂停视频时更新状态
-    private fun pauseVideo(position: Int) {
-        val viewHolder = mRecyclerView.findViewHolderForAdapterPosition(position) as? MusicRecycleViewAdapter.VideoViewHolder
-        viewHolder?.pauseVideo()
-        // 可以在这里更新ViewModel中的播放状态
-        mMainMusicViewModel.setPlaying(false)
-    }
-
     // 监听进度更新
     private fun observeProgressUpdates() {
+
         mMainMusicViewModel.progressLiveData.observe(viewLifecycleOwner) { (currentPosition, duration) ->
+            if (duration <= 0) {
+                Log.d("ProgressUpdate", "无效时长: $duration")
+                return@observe
+            }
             // 获取当前播放的ViewHolder
             val viewHolder = mRecyclerView.findViewHolderForAdapterPosition(currentCenterPosition)
             if (viewHolder is MusicRecycleViewAdapter.VideoViewHolder) {
@@ -316,6 +295,7 @@ class MainMusicFragment : BaseMusicFragment() {
                 val progressPercent = if (duration > 0) ((currentPosition * 100) / duration).toInt() else 0
                 val formattedTime = formatTime(currentPosition.toInt())
                 viewHolder.updateProgress(progressPercent, formattedTime)
+                Log.d("ProgressUpdate", "更新进度: $progressPercent%，位置: $currentCenterPosition")
             }
         }
     }

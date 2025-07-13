@@ -383,7 +383,7 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
                 if (sharedPlayer.isPlaying) {
                     val currentPosition = sharedPlayer.currentPosition
                     val duration = sharedPlayer.duration
-
+//                    Log.d("ProgressUpdate", "当前进度: $currentPosition, 总时长: $duration")
                     // 通过LiveData通知Fragment更新进度条
                     progressLiveData.postValue(Pair(currentPosition, duration))
                 }

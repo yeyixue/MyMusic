@@ -150,6 +150,14 @@ class MusicRecycleViewAdapter(
         holder.itemView.setOnClickListener {
             onItemClickListener?.onItemClick(musicInfo)
         }
+
+    }
+
+    override fun onViewAttachedToWindow(holder: RecyclerView.ViewHolder) {
+        super.onViewAttachedToWindow(holder)
+        if (holder is VideoViewHolder) {
+            holder.setIsRecyclable(false) // 防止被系统回收
+        }
     }
 
     override fun onBindViewHolder(
@@ -588,6 +596,8 @@ class MusicRecycleViewAdapter(
                 viewModel.sharedPlayer.addListener(object : Player.Listener {
                     override fun onPlaybackStateChanged(state: Int) {
                         if (state == Player.STATE_READY) {
+                            // 启动进度更新（确保播放时才启动）
+                            viewModel.startProgressUpdates() // 准备就绪后启动更新
                             val duration = viewModel.sharedPlayer.duration
                             Log.d("MyMusic", "视频时长：${duration}毫秒") // 检查是否正常
                             thumbnailImageView.visibility = View.GONE
@@ -604,9 +614,11 @@ class MusicRecycleViewAdapter(
                 })
                 viewModel.sharedPlayer.prepare()
                 viewModel.sharedPlayer.playWhenReady = true
+                setIsRecyclable(false)
+
             } else {
                 // 非当前页：只显示封面图
-
+                setIsRecyclable(true)
                 // 清除播放器的媒体项和监听（避免残留）
 //                viewModel.sharedPlayer.clearMediaItems() // 清除旧媒体
                 playerView.player = null // 解绑视图但保留播放器状态
@@ -617,7 +629,8 @@ class MusicRecycleViewAdapter(
         }
         // 更新进度条显示
         fun updateProgress(progress: Int, formattedTime: String) {
-            if (!seekBar.isDragging) { // 避免用户拖动时被覆盖
+            if (!seekBar.isDragging) { // 避免用户拖动时
+                Log.d("SeekBarUpdate", "进度条更新: $progress%")// 被覆盖
                 seekBar.updateMediaProgress(progress)
                 tvCurrentTime.text = formattedTime
             }
