@@ -6,6 +6,7 @@
         <domain includeSubdomains="true">192.168.231.60</domain>
         <domain includeSubdomains="true">192.168.175.60</domain>
         <domain includeSubdomains="true">192.168.0.100</domain>
+        <domain includeSubdomains="true">10.3.185.235</domain>
         <!-- 若有其他需要允许的域名/IP，继续添加 -->
         <!-- <domain includeSubdomains="true">example.com</domain> -->
     </domain-config>

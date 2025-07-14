@@ -18,6 +18,10 @@ import com.example.mymusic.adapter.MusicRecycleViewAdapter
 import com.example.mymusic.repo.entity.MusicInfo
 import com.example.mymusic.view.SmartSeekBar
 import com.example.mymusic.viewmodel.fragment.MainMusicViewModel
+import kotlin.compareTo
+import kotlin.div
+import kotlin.text.toInt
+import kotlin.times
 
 
 class MainMusicFragment : BaseMusicFragment() {
@@ -89,7 +93,7 @@ class MainMusicFragment : BaseMusicFragment() {
                     }else{
                         currentCenterPosition = 0
                         _currentPlayingSongId.value = firstMusic.songId.toString()
-                        playVideo(currentCenterPosition)
+                        mMainMusicViewModel.playVideo(currentCenterPosition,firstMusic,mRecyclerView)
                     }
                 }
             }
@@ -112,17 +116,17 @@ class MainMusicFragment : BaseMusicFragment() {
         mMainMusicViewModel.setPlayListDefault()
 
 
-        // 监听播放进度变化，更新当前显示项的进度条
-        mMainMusicViewModel.currentProgressPercent.observe(viewLifecycleOwner) { percent ->
-            val currentPosition = getCurrentPlayingPosition()
-            if (currentPosition != -1) {
-                mMusicRecycleViewAdapter.updateItemProgress(
-                    currentPosition,
-                    percent,
-                    mMainMusicViewModel.formattedCurrentTime.value ?: "00:00"
-                )
-            }
-        }
+//        // 监听播放进度变化，更新当前显示项的进度条
+//        mMainMusicViewModel.currentProgressPercent.observe(viewLifecycleOwner) { percent ->
+//            val currentPosition = getCurrentPlayingPosition()
+//            if (currentPosition != -1) {
+//                mMusicRecycleViewAdapter.updateItemProgress(
+//                    currentPosition,
+//                    percent,
+//                    mMainMusicViewModel.formattedCurrentTime.value ?: "00:00"
+//                )
+//            }
+//        }
     }
 
     // 获取当前播放歌曲的位置
@@ -150,7 +154,7 @@ class MainMusicFragment : BaseMusicFragment() {
         mMusicRecycleViewAdapter.setRecyclerView(mRecyclerView)
 
 
-        // 设置进度更新监听,这是adaapter的拖动回调处理逻辑
+        // 设置进度更新监听,这是adapter的拖动回调处理逻辑
         mMusicRecycleViewAdapter.setOnPlayProgressListener(object : MusicRecycleViewAdapter.OnPlayProgressListener {
             override fun onProgressUpdate(position: Int, progress: Int, currentTime: String, totalTime: String) {
                 // 用户拖动进度条时，更新ViewModel
@@ -190,6 +194,7 @@ class MainMusicFragment : BaseMusicFragment() {
                         // 更新当前中心位置
                         currentCenterPosition = newCenterPosition
                         if(newMusic.isVideo==false){
+                            mMainMusicViewModel.switchToAudioPlayback()
                             //播放音乐
                             // 只有当新页面的歌曲ID与当前播放的不同时才切换播放
                             if (newMusic.songId.toString() != _currentPlayingSongId.value) {
@@ -198,12 +203,16 @@ class MainMusicFragment : BaseMusicFragment() {
                                 // 播放新歌曲
                                 mMainMusicViewModel.setCurrentMusicId(newMusic.songId.toString())
                                 mMainMusicViewModel.playMusic(newMusic)
+                                //视频和
+                                mMainMusicViewModel.startProgressUpdates()
 
                             }
                         }else{
                             //处理播放视频
 //                            mMainMusicViewModel.pauseVideo()
-                            playVideo(currentCenterPosition)
+                            Log.d("Mymusic","playVideo(currentCenterPosition) currentCenterPosition是 $currentCenterPosition ")
+                            mMainMusicViewModel.playVideo(currentCenterPosition,newMusic,mRecyclerView)
+                            mMainMusicViewModel.startProgressUpdates()
                         }
                         // 更新当前播放ID
                         _currentPlayingSongId.value = newMusic.songId.toString()
@@ -233,89 +242,34 @@ class MainMusicFragment : BaseMusicFragment() {
     }
 
 
-    // 播放视频时更新状态
-    private fun playVideo(position: Int) {
-        mMainMusicViewModel.pauseVideo() // 停止音乐播放
-
-        // 2. 解绑上一个页面的 PlayerView
-        val oldHolder = mRecyclerView.findViewHolderForAdapterPosition(currentCenterPosition)
-        if (oldHolder is MusicRecycleViewAdapter.VideoViewHolder) {
-            oldHolder.playerView.player = null
-            Log.d("PlayVideo", "解绑上一个页面的 PlayerView: $currentCenterPosition")
-        }
-        // 3. 获取当前页面 ViewHolder
-        val viewHolder = mRecyclerView.findViewHolderForAdapterPosition(position)
-        if (viewHolder is MusicRecycleViewAdapter.VideoViewHolder) {
-            // 1. 重置共享播放器状态
-            val player = mMainMusicViewModel.sharedPlayer
-            player.stop() // 停止当前播放
-            player.clearMediaItems() // 清除旧媒体
-//            player.removeAllListeners() // 移除所有旧监听
-
-            // 2. 绑定新页面的 PlayerView
-            viewHolder.playerView.visibility = View.VISIBLE
-            viewHolder.thumbnailImageView.visibility = View.GONE
-            viewHolder.playerView.player = player // 绑定新视图
-
-            // 3. 加载新视频
-            val currentMusic = musicList[position]
-            val videoUrl = mMainMusicViewModel.getVideoUrlBySongId(currentMusic.songId)
-            val mediaItem = MediaItem.fromUri(videoUrl)
-            player.setMediaItem(mediaItem)
-
-
-            // 4. 准备并播放
-            player.prepare()
-            player.playWhenReady = true
-            // 更新当前播放位置
-            currentCenterPosition = position
-            mMainMusicViewModel.setCurrentMusicId(currentMusic.songId.toString())
-
-            // 标记当前播放的是视频
-            mMainMusicViewModel.startVideoPlayback()
-
-            // 开始监听进度
-            mMainMusicViewModel.startProgressUpdates()
-        }
-    }
-
-
     // 监听进度更新
     private fun observeProgressUpdates() {
-
         mMainMusicViewModel.progressLiveData.observe(viewLifecycleOwner) { (currentPosition, duration) ->
             if (duration <= 0) {
-                Log.d("ProgressUpdate", "无效时长: $duration")
+                Log.d("ProgressUpdate", "无效时长: $duration，可能是音频/视频未准备好")
                 return@observe
             }
-            val progressPercent = if (duration > 0) ((currentPosition * 100) / duration).toInt() else 0
-            val formattedTime = formatTime(currentPosition.toInt())
+            // 计算进度百分比（0-100）
+            val progressPercent = ((currentPosition * 100) / duration).toInt().coerceIn(0, 100)
+            // 格式化当前时间（复用ViewModel的格式化方法）
+            val formattedTime = mMainMusicViewModel.formatTime(currentPosition.toInt())
+            // 获取当前中心位置（音频和视频共用同一个位置标记）
             val currentPlayingPosition = mMusicRecycleViewAdapter.currentCenterPosition
+
+            // 日志调试：区分音频/视频进度
+            val mediaType = if (mMainMusicViewModel.isPlayingVideo) "视频" else "音频"
+//            Log.d("ProgressUpdate", "$mediaType 进度: $progressPercent%，位置: $currentPlayingPosition")
+
+            // 更新进度条（统一调用适配器方法）
             mMusicRecycleViewAdapter.updateItemProgress(
                 currentPlayingPosition,
                 progressPercent,
                 formattedTime
             )
-
-            // 获取当前播放的ViewHolder
-//            val viewHolder = mRecyclerView.findViewHolderForAdapterPosition(currentCenterPosition)
-//            if (viewHolder is MusicRecycleViewAdapter.VideoViewHolder) {
-//                // 更新进度条
-//                val progressPercent = if (duration > 0) ((currentPosition * 100) / duration).toInt() else 0
-//                val formattedTime = formatTime(currentPosition.toInt())
-//                viewHolder.updateProgress(progressPercent, formattedTime)
-////                Log.d("ProgressUpdate", "更新进度: $progressPercent%，位置: $currentCenterPosition")
-//            }
         }
     }
 
-    // 格式化时间辅助方法
-    private fun formatTime(millis: Int): String {
-        val totalSeconds = millis / 1000
-        val minutes = totalSeconds / 60
-        val seconds = totalSeconds % 60
-        return String.format("%02d:%02d", minutes, seconds)
-    }
+
 
 
 

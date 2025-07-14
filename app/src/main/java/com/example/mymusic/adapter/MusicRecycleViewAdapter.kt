@@ -34,7 +34,7 @@ import com.example.mymusic.viewmodel.fragment.MainMusicViewModel
  * 根据isVideo字段区分音乐/视频两种视图类型，适配复用布局中的控件
  */
 class MusicRecycleViewAdapter(
-    private val viewModel: MainMusicViewModel, // 加这一行
+    private val viewModel: MainMusicViewModel,
     initialList: List<MusicInfo> = emptyList()
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
@@ -49,7 +49,7 @@ class MusicRecycleViewAdapter(
         this.mRecyclerView = recyclerView
     }
 
-    // 修改 updateBufferProgress 方法，使其更健壮
+
     fun updateBufferProgress(percent: Int) {
         val validPercent = percent.coerceIn(0, 100)
         Log.d("BufferProgress", "适配器更新缓冲进度: $validPercent")
@@ -222,7 +222,7 @@ class MusicRecycleViewAdapter(
         val ivSongImage: ImageView = itemView.findViewById(R.id.imageViewSongIMG)
         val constraintLayoutClickArea: ConstraintLayout = itemView.findViewById(R.id.constraintLayoutClickArea)
         val itemRootLayout: ConstraintLayout = itemView.findViewById(R.id.itemMainMusic)
-        // 新增：保存动画的 composition（用于获取时长）
+        // 保存动画的 composition（用于获取时长）
         private var heartComposition: LottieComposition? = null
 
         fun setRandomSongImage() {
@@ -249,8 +249,6 @@ class MusicRecycleViewAdapter(
                         lottieLike?.setComposition(composition)
                         lottieLike?.setMinAndMaxFrame(25,51)
                         lottieLike?.setProgress(0f) // 初始显示第一帧}.addFailureListener { e ->
-                        // 加载失败（如文件不存在、格式错误）
-                        Log.d("Lottie", "动画加载失败")
                     }
             }
 
@@ -309,8 +307,6 @@ class MusicRecycleViewAdapter(
 
     }
 
-    // 设置进度条的公共函数
-
 
     // 设置关注按钮的点击事件处理
     fun setupFollowButton(
@@ -344,7 +340,7 @@ class MusicRecycleViewAdapter(
                 likeView.progress = if (musicInfo.liked) 1f else 0f
             }
             .addFailureListener { e ->
-                Log.d("Lottie", "动画加载失败: ${e.message}")
+                Log.d("Lottie", "动画加载失败2: ${e.message}")
             }
 
         // 设置点击事件
@@ -394,10 +390,10 @@ class MusicRecycleViewAdapter(
         currentTime: String,
         isDragging: Boolean = false // 新增参数：是否正在拖动
     ) {
+//        Log.d("MyMusic","isDragging 是 $isDragging")
         if (!isDragging) {
             seekBar.updateMediaProgress(progress)
             tvCurrentTime.text = currentTime
-
         }
     }
     // 适配器层的updateItemProgress方法（用于外部调用）
@@ -473,7 +469,6 @@ class MusicRecycleViewAdapter(
             tvFollow.text = if (musicInfo.followed) "已关注" else "关注"
             //初始化时设置动画
             lottieLike?.run {
-//            setAnimation("heart_start_end.json")
                 LottieCompositionFactory.fromAsset(context, "heart_start_end.json")
                     .addListener { composition ->
                         // 动画加载成功，设置给 LottieAnimationView
@@ -482,7 +477,6 @@ class MusicRecycleViewAdapter(
                         lottieLike?.setMinAndMaxFrame(25,51)
                         lottieLike?.setProgress(0f) // 初始显示第一帧}.addFailureListener { e ->
                         // 加载失败（如文件不存在、格式错误）
-                        Log.d("Lottie", "动画加载失败")
                     }
             }
 
@@ -568,7 +562,7 @@ class MusicRecycleViewAdapter(
                     override fun onPlaybackStateChanged(state: Int) {
                         if (state == Player.STATE_READY) {
                             // 启动进度更新（确保播放时才启动）
-                            viewModel.startProgressUpdates() // 准备就绪后启动更新
+//                            viewModel.startProgressUpdates() // 准备就绪后启动更新
                             val duration = viewModel.sharedPlayer.duration
                             Log.d("MyMusic", "视频时长：${duration}毫秒") // 检查是否正常
                             thumbnailImageView.visibility = View.GONE
@@ -590,7 +584,6 @@ class MusicRecycleViewAdapter(
             } else {
                 // 非当前页：只显示封面图
                 setIsRecyclable(true)
-                // 清除播放器的媒体项和监听（避免残留）
 //                viewModel.sharedPlayer.clearMediaItems() // 清除旧媒体
                 playerView.player = null // 解绑视图但保留播放器状态
                 thumbnailImageView.visibility = View.VISIBLE
@@ -706,7 +699,7 @@ class MusicRecycleViewAdapter(
         fun onLikeStatusChanged(position: Int, isLiked: Boolean)
     }
 
-    // 新增：播放进度更新接口
+    // 播放进度更新接口
     interface OnPlayProgressListener {
         fun onProgressUpdate(position: Int, progress: Int, currentTime: String, totalTime: String)
     }
