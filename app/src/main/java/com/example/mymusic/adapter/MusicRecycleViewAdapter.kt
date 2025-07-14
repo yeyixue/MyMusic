@@ -3,6 +3,7 @@ package com.example.mymusic.adapter
 import android.animation.Animator
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
 import android.view.LayoutInflater
@@ -263,7 +264,7 @@ class MusicRecycleViewAdapter(
             // 3. 初始化缓冲进度
             seekBar.setBufferProgress(0)
 
-            // 4. 设置 SmartSeekBar 的核心监听（替代 SeekBarUtils）
+            // 4. 设置 SmartSeekBar 的核心监听（替代 SeekBarUtils） 音乐
             seekBar.setOnProgressActionListener(object : SmartSeekBar.OnProgressActionListener {
                 // 进度变化时触发（包括拖动过程和自动更新）
                 override fun onProgressChanged(
@@ -275,8 +276,13 @@ class MusicRecycleViewAdapter(
                 ) {
 //                    // 仅处理用户交互导致的进度变化---这个要写 不然没反应
                     if (fromUser) {
-                        progressListener?.onProgressUpdate(adapterPosition, progress,formattedTime,tvTotalTime.text.toString())
+                        ProgressListenerManager.progressListener?.onProgressUpdate(adapterPosition, progress,formattedTime,tvTotalTime.text.toString())
                     }
+                }
+
+                override fun onStopTrackingTouch(seekBar: SmartSeekBar) {
+                    super.onStopTrackingTouch(seekBar)
+                    Log.e("onStopTrackingTouch", "音乐onStopTrackingTouch")
                 }
                 //不需要重写 onStartTrackingTouch和onStopTrackingTouch
             })
@@ -397,6 +403,7 @@ class MusicRecycleViewAdapter(
     }
     // 适配器层的updateItemProgress方法（用于外部调用）
     fun updateItemProgress(position: Int, progress: Int, currentTime: String) {
+        Log.d("updateItemProgress", "fun updateItemProgress(position: Int, progress: Int, currentTime: String) ")
         if (position < 0 || position >= infoList.size) return // 校验位置合法性
         // 通过RecyclerView获取对应位置的ViewHolder
         val viewHolder = mRecyclerView?.findViewHolderForAdapterPosition(position)
@@ -491,7 +498,7 @@ class MusicRecycleViewAdapter(
             // 3. 初始化缓冲进度
             seekBar.setBufferProgress(0)
 
-            // 4. 设置 SmartSeekBar 的核心监听（替代 SeekBarUtils）
+            // 4. 设置 SmartSeekBar 的核心监听（替代 SeekBarUtils） 视频
             seekBar.setOnProgressActionListener(object : SmartSeekBar.OnProgressActionListener {
                 // 进度变化时触发（包括拖动过程和自动更新）
                 override fun onProgressChanged(
@@ -503,9 +510,10 @@ class MusicRecycleViewAdapter(
                 ) {
 //                    // 仅处理用户交互导致的进度变化---这个要写 不然没反应
                     if (fromUser) {
-                        progressListener?.onProgressUpdate(adapterPosition, progress,formattedTime,tvTotalTime.text.toString())
+                        ProgressListenerManager.progressListener?.onProgressUpdate(adapterPosition, progress,formattedTime,tvTotalTime.text.toString())
                     }
                 }
+
                 //不需要重写 onStartTrackingTouch和onStopTrackingTouch
             })
 
@@ -702,14 +710,16 @@ class MusicRecycleViewAdapter(
     }
 
     // 播放进度更新接口
-    interface OnPlayProgressListener {
-        fun onProgressUpdate(position: Int, progress: Int, currentTime: String, totalTime: String)
+    object ProgressListenerManager {
+        var progressListener: OnPlayProgressListener? = null
+
+        fun interface OnPlayProgressListener {
+            fun onProgressUpdate(position: Int, progress: Int, currentTime: String, totalTime: String)
+        }
     }
 
-    private var progressListener: OnPlayProgressListener? = null
-
-    fun setOnPlayProgressListener(listener: OnPlayProgressListener) {
-        this.progressListener = listener
+    fun setOnPlayProgressListener(listener: ProgressListenerManager.OnPlayProgressListener) {
+        ProgressListenerManager.progressListener = listener
     }
 
     // 进度跳转回调接口

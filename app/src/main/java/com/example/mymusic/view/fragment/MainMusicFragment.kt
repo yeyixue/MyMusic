@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mymusic.R
 import com.example.mymusic.adapter.MusicRecycleViewAdapter
+import com.example.mymusic.adapter.MusicRecycleViewAdapter.ProgressListenerManager
 import com.example.mymusic.repo.entity.MusicInfo
 import com.example.mymusic.view.SmartSeekBar
 import com.example.mymusic.viewmodel.fragment.MainMusicViewModel
@@ -73,7 +74,7 @@ class MainMusicFragment : BaseMusicFragment() {
         setupMusicList()    // 再监听数据变化
 
         mMainMusicViewModel.initPlayer(requireContext())
-        // 启动进度监听（关键：在此处调用，确保视图和数据已准备好）
+        // 启动进度监听
         observeProgressUpdates()
     }
 
@@ -139,8 +140,8 @@ class MainMusicFragment : BaseMusicFragment() {
         mMusicRecycleViewAdapter.setRecyclerView(mRecyclerView)
 
 
-        // 设置进度更新监听,这是adapter的拖动回调处理逻辑
-        mMusicRecycleViewAdapter.setOnPlayProgressListener(object : MusicRecycleViewAdapter.OnPlayProgressListener {
+        // 设置进度更新监听,这是adapter的拖动回调处理逻辑--播放进度更新接口
+        mMusicRecycleViewAdapter.setOnPlayProgressListener(object : ProgressListenerManager.OnPlayProgressListener {
             override fun onProgressUpdate(position: Int, progress: Int, currentTime: String, totalTime: String) {
                 // 用户拖动进度条时，更新ViewModel
                 val musicInfo = musicList[position]
@@ -164,6 +165,7 @@ class MainMusicFragment : BaseMusicFragment() {
 //                }
 
             }
+
         })
 
         // 设置PagerSnapHelper实现整页滚动效果
@@ -187,7 +189,7 @@ class MainMusicFragment : BaseMusicFragment() {
                         val viewHolder = mRecyclerView.findViewHolderForAdapterPosition(currentCenterPosition)
 
                         val newMusic = musicList[newCenterPosition]
-                        Log.d("PositionUpdate", "上滑/下滑后，当前位置: $currentCenterPosition") // 新增日志验证
+                        Log.d("PositionUpdate", "滚动完成，旧位置: $currentCenterPosition → 新位置: $newCenterPosition")
                         // 暂停当前播放（无论是音乐还是视频）
                         if (currentCenterPosition != -1) {
                             val currentMusic = musicList[currentCenterPosition]
@@ -209,16 +211,15 @@ class MainMusicFragment : BaseMusicFragment() {
                                 // 播放新歌曲
                                 mMainMusicViewModel.setCurrentMusicId(newMusic.songId.toString())
                                 mMainMusicViewModel.playMusic(newMusic)
-                                //视频和
-                                mMainMusicViewModel.startProgressUpdates()
 
+//                                mMainMusicViewModel.startProgressUpdates()
                             }
                         }else{
                             //处理播放视频
 //                            mMainMusicViewModel.pauseVideo()
                             Log.d("Mymusic","playVideo(currentCenterPosition) currentCenterPosition是 $currentCenterPosition ")
                             mMainMusicViewModel.playVideo(currentCenterPosition,newMusic,mRecyclerView)
-                            mMainMusicViewModel.startProgressUpdates()
+//                            mMainMusicViewModel.startProgressUpdates()
                         }
                         // 更新当前播放ID
                         _currentPlayingSongId.value = newMusic.songId.toString()
@@ -265,6 +266,7 @@ class MainMusicFragment : BaseMusicFragment() {
             // 日志调试：区分音频/视频进度
             val mediaType = if (mMainMusicViewModel.isPlayingVideo) "视频" else "音频"
 //            Log.d("ProgressUpdate", "$mediaType 进度: $progressPercent%，位置: $currentPlayingPosition")
+            Log.d("ProgressUpdate", "currentPlayingPosition: $currentPlayingPosition，progressPercent: $progressPercent")
 
             // 更新进度条（统一调用适配器方法）
             mMusicRecycleViewAdapter.updateItemProgress(

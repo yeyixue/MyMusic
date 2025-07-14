@@ -19,6 +19,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.viewpager2.widget.ViewPager2
 import com.example.mymusic.R
+import com.example.mymusic.adapter.MusicRecycleViewAdapter.ProgressListenerManager
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -63,7 +64,31 @@ class SmartSeekBar @JvmOverloads constructor(
         fun onStartTrackingTouch(seekBar: SmartSeekBar) {}
         fun onStopTrackingTouch(seekBar: SmartSeekBar) {}
     }
+    // 需要设置setOnProgressActionListener，不然actionListener为空，导致fragment没法监听，progressListener弄成单例
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        setOnProgressActionListener(object : SmartSeekBar.OnProgressActionListener {
+            // 进度变化时触发（包括拖动过程和自动更新）
+            override fun onProgressChanged(
+                seekBar: SmartSeekBar,
+                progress: Int,
+                timeMs: Int,
+                formattedTime: String,
+                fromUser: Boolean
+            ) {
+//                    // 仅处理用户交互导致的进度变化---这个要写 不然没反应
+                if (fromUser) {
+                    ProgressListenerManager.progressListener?.onProgressUpdate(0, progress,formattedTime,tvTotalTime?.text.toString())
+                }
+            }
 
+            override fun onStopTrackingTouch(seekBar: SmartSeekBar) {
+                super.onStopTrackingTouch(seekBar)
+                Log.e("onStopTrackingTouch", "音乐onStopTrackingTouch")
+            }
+            //不需要重写 onStartTrackingTouch和onStopTrackingTouch
+        })
+    }
     private var actionListener: OnProgressActionListener? = null
 
     // 新增文本显示相关变量
@@ -248,6 +273,8 @@ class SmartSeekBar @JvmOverloads constructor(
                 actionListener?.onProgressChanged(this, finalProgress, timeMs, formatTime(timeMs), true)
                 actionListener?.onStopTrackingTouch(this)
 
+                Log.d("MyMusic","SmartSeekBar的MMotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL")
+                // 更新进度条的ui进度
                 smoothSetProgress(finalProgress)
                 thumb = thumbNormal
                 updateLayerInset(insetNormal)
@@ -275,9 +302,13 @@ class SmartSeekBar @JvmOverloads constructor(
         }
     }
 
+
+
+
     // 资源释放
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
+        Log.d("SmartSeekBar","onDetachedFromWindow")
         progressAnimator?.cancel()
         progressAnimator = null
         actionListener = null

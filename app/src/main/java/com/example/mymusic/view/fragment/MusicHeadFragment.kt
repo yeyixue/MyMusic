@@ -89,13 +89,13 @@ class MusicHeadFragment : BaseMusicFragment() {
                         // 切换播放状态（需要在 MainMusicViewModel 中处理播放/暂停逻辑）
                         Log.d("MusicHeadFragment", "已经在播放页")
                         mainMusicFragment?.mMainMusicViewModel?.togglePlaying()
-                        val isPlaying = mainMusicFragment?.mMainMusicViewModel?.isPlaying?.value ?: false
+                        val isPlaying = mainMusicFragment?.mMainMusicViewModel?.isPlaying?.value == true
                         mMusicHeadViewModel.updatePlayIcon(mainMenuItem, isPlaying,resources)
 
                     } else {
                         Log.d("MusicHeadFragment", "切换到播放页 ")
                         viewPager2.currentItem = 0
-                        val isPlaying = mainMusicFragment?.mMainMusicViewModel?.isPlaying?.value ?: false
+                        val isPlaying = mainMusicFragment?.mMainMusicViewModel?.isPlaying?.value == true
                         mMusicHeadViewModel.updatePlayIcon(mainMenuItem, isPlaying,resources)
                         mainMenuItem.title=""
                     }

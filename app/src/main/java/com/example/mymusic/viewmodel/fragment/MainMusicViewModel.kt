@@ -65,7 +65,10 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
     // 初始化播放器时，确保播放完成监听正确绑定
     init {
 
+        mediaPlayer.setOnSeekCompleteListener {
+            Log.d("Music"," mediaPlayer.setOnSeekCompleteListener 更新缓冲进度是${mediaPlayer.currentPosition}")
 
+        }
 
         // 设置缓冲监听
         mediaPlayer.setOnBufferingUpdateListener { _, percent ->
@@ -200,8 +203,8 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     /**
-     * 统一的进度跳转方法（同时支持音乐和视频）
-     * 还需要处理动画逻辑
+     * 统一的音频进度跳转方法（同时支持音乐和视频）
+     * 还需要处理动画逻辑--放在seekBar的Event事件了！！！
      * @param position 目标进度（毫秒，Long类型兼容大时长视频）
      */
     fun seekTo(position: Long) {
@@ -325,7 +328,7 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
     }
     // 切换播放状态（统一控制：音乐/视频）
     fun togglePlaying() {
-        val currentState = _isPlaying.value ?: false
+        val currentState = _isPlaying.value == true
         _isPlaying.value = !currentState // 切换状态
 
         if (currentState) {
@@ -380,6 +383,7 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
     fun startProgressUpdates() {
         // 关键：停止旧任务，避免重复发送
         stopProgressUpdates()
+        Log.d("startProgressUpdates", "isPlayingVideo: $isPlayingVideo,mediaPlayer.isPlaying: $mediaPlayer.isPlaying")
 
         progressRunnable = object : Runnable {
             override fun run() {
@@ -400,10 +404,7 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
                     progressLiveData.postValue(Pair(currentPos, duration))
                 }
                 // 仅在播放状态下继续更新
-                if ((isPlayingVideo && sharedPlayer.isPlaying) ||
-                    (!isPlayingVideo && mediaPlayer.isPlaying)) {
-                    progressHandler.postDelayed(this, 1000)
-                }
+                progressHandler.postDelayed(this, 1000)
             }
         }
         progressHandler.post(progressRunnable!!)
