@@ -1,5 +1,6 @@
 package com.example.mymusic.view.fragment
 
+import android.media.AudioManager
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -116,26 +117,8 @@ class MainMusicFragment : BaseMusicFragment() {
         }
         // 初始加载歌单数据
         mMainMusicViewModel.setPlayListDefault()
-
-
-//        // 监听播放进度变化，更新当前显示项的进度条
-//        mMainMusicViewModel.currentProgressPercent.observe(viewLifecycleOwner) { percent ->
-//            val currentPosition = getCurrentPlayingPosition()
-//            if (currentPosition != -1) {
-//                mMusicRecycleViewAdapter.updateItemProgress(
-//                    currentPosition,
-//                    percent,
-//                    mMainMusicViewModel.formattedCurrentTime.value ?: "00:00"
-//                )
-//            }
-//        }
     }
 
-    // 获取当前播放歌曲的位置
-    private fun getCurrentPlayingPosition(): Int {
-        val currentId = mMainMusicViewModel.currentMusicId.value ?: return -1
-        return musicList.indexOfFirst { it.songId.toString() == currentId }
-    }
 
     private fun setupRecyclerView() {
         // 使用已初始化的mRecyclerView（避免重复findViewById）
@@ -170,6 +153,7 @@ class MainMusicFragment : BaseMusicFragment() {
 //                }
                 // 无论播放/暂停，都强制跳转进度
                 mMainMusicViewModel.seekToPercent(progress)
+                Log.d("MyMusic","无论播放/暂停，都强制跳转进度mMainMusicViewModel.seekToPercent(progress)")
 
                 // 手动更新进度条UI（避免被ViewModel的旧进度覆盖）
 //                mMusicRecycleViewAdapter.updateItemProgress(position, progress, currentTime)
@@ -193,13 +177,17 @@ class MainMusicFragment : BaseMusicFragment() {
                 super.onScrollStateChanged(recyclerView, newState)
 
                 if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+
                     // 获取当前居中的item位置
                     val snapView = snapHelper.findSnapView(layoutManager) ?: return
                     val newCenterPosition = layoutManager.getPosition(snapView)
 
                     // 检查是否真的切换到了新页面
                     if (newCenterPosition != currentCenterPosition && newCenterPosition in musicList.indices) {
+                        val viewHolder = mRecyclerView.findViewHolderForAdapterPosition(currentCenterPosition)
+
                         val newMusic = musicList[newCenterPosition]
+                        Log.d("PositionUpdate", "上滑/下滑后，当前位置: $currentCenterPosition") // 新增日志验证
                         // 暂停当前播放（无论是音乐还是视频）
                         if (currentCenterPosition != -1) {
                             val currentMusic = musicList[currentCenterPosition]

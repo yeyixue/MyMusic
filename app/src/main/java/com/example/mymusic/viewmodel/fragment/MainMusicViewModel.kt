@@ -2,8 +2,8 @@ package com.example.mymusic.viewmodel.fragment
 
 import android.app.Application
 import android.content.Context
+import android.media.AudioManager
 import android.media.MediaPlayer
-import android.os.CountDownTimer
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -11,12 +11,10 @@ import android.view.View
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mymusic.BuildConfig
 import com.example.mymusic.adapter.MusicRecycleViewAdapter
@@ -27,7 +25,6 @@ import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import java.util.concurrent.TimeUnit
-import kotlin.random.Random
 
 class MainMusicViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -49,7 +46,9 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
     val isPlaying: LiveData<Boolean> = _isPlaying
 
     // 播放器核心
-    private val mediaPlayer = MediaPlayer()
+//    lateinit var mediaPlayer: ExoPlayer
+
+    internal val mediaPlayer = MediaPlayer()
     private var isMediaPrepared = false // 标记播放器是否准备完成
     // 缓冲进度 LiveData
     private val _bufferProgress = MutableLiveData<Int>(0)
@@ -65,6 +64,9 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
 
     // 初始化播放器时，确保播放完成监听正确绑定
     init {
+
+
+
         // 设置缓冲监听
         mediaPlayer.setOnBufferingUpdateListener { _, percent ->
             Log.d("Music"," mediaPlayer.setOnBufferingUpdateListener 更新缓冲进度是$percent")
@@ -187,7 +189,7 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
             if (percent <= bufferedPercent) {
                 val duration = mediaPlayer.duration
                 val targetPosition = (percent * duration / 100f).toLong()
-                Log.w(TAG, "targetPosition 是是: $targetPosition%   percent 是$percent")
+                Log.w(TAG, "targetPosition: $targetPosition%   percent 是$percent")
 
                 seekTo(targetPosition)
             } else {
