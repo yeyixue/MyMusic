@@ -55,19 +55,8 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
     private val _bufferProgress = MutableLiveData<Int>(0)
     val bufferProgress: LiveData<Int> = _bufferProgress
 
-    // 进度与时间相关LiveData（供UI层观察）
-//    private val _totalDuration = MutableLiveData<Int>(0) // 总时长（毫秒）
-//    val totalDuration: LiveData<Int> = _totalDuration
-//    private val _currentPosition = MutableLiveData<Int>(0) // 当前进度（毫秒）
-//    val currentPosition: LiveData<Int> = _currentPosition
-//    private val _currentProgressPercent = MutableLiveData<Int>(0) // 当前进度（0-100百分比）
-//    val currentProgressPercent: LiveData<Int> = _currentProgressPercent
-//    private val _formattedCurrentTime = MutableLiveData<String>("00:00") // 格式化当前时间（mm:ss）
-//    val formattedCurrentTime: LiveData<String> = _formattedCurrentTime
-//    private val _formattedTotalTime = MutableLiveData<String>("00:00") // 格式化总时间（mm:ss）
-//    val formattedTotalTime: LiveData<String> = _formattedTotalTime
-    // 进度更新定时器
-//    private var progressTimer: CountDownTimer? = null
+    private val progressHandler = Handler(Looper.getMainLooper())
+    private var progressRunnable: Runnable? = null // 用变量保存当前任务
 
     // 通知Fragment滚动到指定位置的LiveData
     private val _scrollToPosition = MutableLiveData<Int?>()
@@ -187,8 +176,8 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
                 seekTo(targetPosition) // 调用统一方法
             }
         } else {
-            // 音乐按百分比跳转
-            _isPlaying.value?.let { if (!it) return }
+            // 音乐按百分比跳转：删除对播放状态的检查（允许暂停时跳转）
+            // 原问题点：_isPlaying.value?.let { if (!it) return }
 //            val targetMillis = percentToMillis(percent)
 //            seekTo(targetMillis.toLong()) // 调用统一方法
             // 获取当前缓冲百分比
@@ -198,6 +187,8 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
             if (percent <= bufferedPercent) {
                 val duration = mediaPlayer.duration
                 val targetPosition = (percent * duration / 100f).toLong()
+                Log.w(TAG, "targetPosition 是是: $targetPosition%   percent 是$percent")
+
                 seekTo(targetPosition)
             } else {
                 Log.w(TAG, "无法跳转到未缓冲区域: $percent% > $bufferedPercent%")
@@ -216,7 +207,9 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
 
         if (isPlayingVideo) {
             // 视频进度跳转（使用ExoPlayer）
-            if (::sharedPlayer.isInitialized) {
+            if (::sharedPlayer.isInitialized&&
+                sharedPlayer.playbackState != Player.STATE_IDLE &&
+                sharedPlayer.duration >= 0) {
                 // 确保进度在有效范围内（0 <= position <= 总时长）
                 val validPosition = position.coerceIn(0, sharedPlayer.duration)
                 sharedPlayer.seekTo(validPosition)
@@ -262,32 +255,6 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
     fun clearScrollCommand() {
         _scrollToPosition.value = null
     }
-
-    // 启动进度更新定时器（每秒更新一次）
-//    private fun startProgressTimer() {
-//        stopProgressTimer() // 先停止已有定时器
-//        progressTimer = object : CountDownTimer(Long.MAX_VALUE, 1000) {
-//            override fun onTick(millisUntilFinished: Long) {
-//                if (mediaPlayer.isPlaying) {
-//                    val currentMillis = mediaPlayer.currentPosition
-//                    // 更新毫秒进度
-//                    _currentPosition.value = currentMillis
-//                    // 计算并更新百分比进度（0-100）
-//                    _currentProgressPercent.value = millisToPercent(currentMillis)
-//                    // 格式化当前时间并更新
-//                    _formattedCurrentTime.value = formatTime(currentMillis)
-//                }
-//            }
-//
-//            override fun onFinish() {}
-//        }.start()
-//    }
-
-//    // 停止进度更新定时器
-//    private fun stopProgressTimer() {
-//        progressTimer?.cancel()
-//        progressTimer = null
-//    }
 
     // 时间格式化（毫秒转mm:ss）
     fun formatTime(millis: Int): String {
@@ -345,7 +312,7 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
                         playNextSong()
                     }
                 }
-                // 新增错误监听
+                // 错误监听
                 override fun onPlayerError(error: PlaybackException) {
                     Log.e("PlayError", "视频播放错误: ${error.message}", error)
                     // 错误时不切歌，可暂停播放
@@ -404,43 +371,49 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
 
-    // 修改startProgressUpdates()，同时支持音频和视频
+    /**
+     * 修改startProgressUpdates()，同时支持音频和视频
+     * 代码里需要同步更新currentPosition
+     */
     fun startProgressUpdates() {
-        if (isPlayingVideo) {
-            // 视频进度更新（原有逻辑）
-            if (::sharedPlayer.isInitialized) {
-                val handler = Handler(Looper.getMainLooper())
-                val updateProgressRunnable = object : Runnable {
-                    override fun run() {
-                        if (sharedPlayer.isPlaying) {
-                            val currentPosition = sharedPlayer.currentPosition
-                            val duration = sharedPlayer.duration
-                            progressLiveData.postValue(Pair(currentPosition, duration))
-                        }
-                        handler.postDelayed(this, 1000)
+        // 关键：停止旧任务，避免重复发送
+        stopProgressUpdates()
+
+        progressRunnable = object : Runnable {
+            override fun run() {
+                if (isPlayingVideo && ::sharedPlayer.isInitialized) {
+                    // 视频进度
+                    val currentPos = sharedPlayer.currentPosition
+                    val duration = sharedPlayer.duration
+                    // 过滤无效时长（duration < 0 时不发送更新）
+                    if (duration >= 0) {
+                        progressLiveData.postValue(Pair(currentPos, duration))
+                    } else {
+                        Log.d("ProgressUpdate", "视频时长无效: $duration，跳过更新")
                     }
+                } else if (!isPlayingVideo && mediaPlayer.isPlaying) {
+                    // 音频进度
+                    val currentPos = mediaPlayer.currentPosition.toLong()
+                    val duration = mediaPlayer.duration.toLong()
+                    progressLiveData.postValue(Pair(currentPos, duration))
                 }
-                handler.post(updateProgressRunnable)
-            }
-        } else {
-            // 新增音频进度更新逻辑（与视频保持一致）
-            if (mediaPlayer.isPlaying) {
-                val handler = Handler(Looper.getMainLooper())
-                val updateProgressRunnable = object : Runnable {
-                    override fun run() {
-                        if (mediaPlayer.isPlaying) {
-                            val currentPosition = mediaPlayer.currentPosition.toLong()
-                            val duration = mediaPlayer.duration.toLong()
-                            progressLiveData.postValue(Pair(currentPosition, duration))
-                        }
-                        handler.postDelayed(this, 1000)
-                    }
+                // 仅在播放状态下继续更新
+                if ((isPlayingVideo && sharedPlayer.isPlaying) ||
+                    (!isPlayingVideo && mediaPlayer.isPlaying)) {
+                    progressHandler.postDelayed(this, 1000)
                 }
-                handler.post(updateProgressRunnable)
             }
         }
+        progressHandler.post(progressRunnable!!)
     }
 
+    // 停止进度更新（必须调用）
+    fun stopProgressUpdates() {
+        progressRunnable?.let {
+            progressHandler.removeCallbacks(it)
+            progressRunnable = null
+        }
+    }
     // 一个统一的方法来切换播放类型
     fun switchToVideoPlayback() {
         // 停止当前所有播放
@@ -460,52 +433,49 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
     fun switchToAudioPlayback() {
         // 停止当前视频播放
         sharedPlayer.stop()
-
         // 标记当前为音频播放状态
         isPlayingVideo = false
     }
-    // 跳转到指定位置
-//    fun seekTo(position: Long) {
-//        if (::sharedPlayer.isInitialized && sharedPlayer.isPlaying) {
-//            sharedPlayer.seekTo(position)
-//        }
-//    }
+
 
     // 播放视频时更新状态
     fun playVideo(position: Int, currentMusic:MusicInfo,  mRecyclerView: RecyclerView) {
 
+
+        // // 1. 获取当前可见的ViewHolder（必须是可见的，未被回收）---因为要处理视频封面
+        val viewHolder = mRecyclerView.findViewHolderForAdapterPosition(position)
+        if (viewHolder !is MusicRecycleViewAdapter.VideoViewHolder) {
+            Log.w("PlayVideo", "ViewHolder已被回收或不可见，无法播放")
+            return
+        }
         switchToVideoPlayback() // 切换到视频
 
-        // 获取当前页面 ViewHolder---因为要处理视频封面
-        val viewHolder = mRecyclerView.findViewHolderForAdapterPosition(position)
-        if (viewHolder is MusicRecycleViewAdapter.VideoViewHolder) {
-            // 1. 重置共享播放器状态
-            val player = sharedPlayer
-            player.stop() // 停止当前播放
-            player.clearMediaItems() // 清除旧媒体
+        // 1. 重置共享播放器状态
+        val player = sharedPlayer
+        player.stop() // 停止当前播放
+        player.clearMediaItems() // 清除旧媒体
 
-            // 2. 绑定新页面的 PlayerView
-            viewHolder.playerView.visibility = View.VISIBLE
-            viewHolder.thumbnailImageView.visibility = View.GONE
-            viewHolder.playerView.player = player // 绑定新视图
+        // 2. 绑定新页面的 PlayerView
+        viewHolder.playerView.visibility = View.VISIBLE
+        viewHolder.thumbnailImageView.visibility = View.GONE
+        viewHolder.playerView.player = player // 绑定新视图
 
-            // 3. 加载新视频
-            val videoUrl = getVideoUrlBySongId(currentMusic.songId)
-            val mediaItem = MediaItem.fromUri(videoUrl)
-            player.setMediaItem(mediaItem)
+        // 3. 加载新视频
+        val videoUrl = getVideoUrlBySongId(currentMusic.songId)
+        val mediaItem = MediaItem.fromUri(videoUrl)
+        player.setMediaItem(mediaItem)
 
-            // 4. 准备并播放
-            player.prepare()
-            player.playWhenReady = true
-            // 更新当前播放位置
-            setCurrentMusicId(currentMusic.songId.toString())
+        // 4. 准备并播放
+        player.prepare()
+        player.playWhenReady = true
+        // 更新当前播放位置
+        setCurrentMusicId(currentMusic.songId.toString())
 
-            // 标记当前播放的是视频
-            startVideoPlayback()
+        // 标记当前播放的是视频
+        startVideoPlayback()
 
-            // 开始监听进度
-            startProgressUpdates()
-        }
+        // 开始监听进度
+        startProgressUpdates()
     }
 
 

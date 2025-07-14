@@ -24,7 +24,6 @@ import com.airbnb.lottie.LottieCompositionFactory
 import com.bumptech.glide.Glide
 import com.example.mymusic.R
 import com.example.mymusic.repo.entity.MusicInfo
-import com.example.mymusic.util.SeekBarUtils
 import com.example.mymusic.view.AutoScrollTextView
 import com.example.mymusic.view.SmartSeekBar
 import com.example.mymusic.viewmodel.fragment.MainMusicViewModel
@@ -476,7 +475,7 @@ class MusicRecycleViewAdapter(
                         lottieLike?.setComposition(composition)
                         lottieLike?.setMinAndMaxFrame(25,51)
                         lottieLike?.setProgress(0f) // 初始显示第一帧}.addFailureListener { e ->
-                        // 加载失败（如文件不存在、格式错误）
+
                     }
             }
 
@@ -627,6 +626,9 @@ class MusicRecycleViewAdapter(
             holder.pauseVideo()
             Log.d("ViewRecycled", "ViewHolder回收，解绑PlayerView")
             holder.firstFrameRendered = false // 重置第一帧渲染状态
+            // 隐藏playerView，显示封面图（避免复用时显示旧画面）
+            holder.playerView.visibility = View.GONE
+            holder.thumbnailImageView.visibility = View.VISIBLE
         }
         super.onViewRecycled(holder)
     }

@@ -198,7 +198,7 @@ class MusicHeadFragment : BaseMusicFragment() {
 
     override fun onDestroy() {
         super.onDestroy()
-        mainMusicFragment?.mMainMusicViewModel?.isPlaying?.removeObservers(viewLifecycleOwner)
+//        mainMusicFragment?.mMainMusicViewModel?.isPlaying?.removeObservers(viewLifecycleOwner)
     }
 }
 

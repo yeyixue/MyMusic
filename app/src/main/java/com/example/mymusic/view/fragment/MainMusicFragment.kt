@@ -1,5 +1,7 @@
 package com.example.mymusic.view.fragment
 
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.View
 import android.widget.LinearLayout
@@ -160,7 +162,23 @@ class MainMusicFragment : BaseMusicFragment() {
                 // 用户拖动进度条时，更新ViewModel
                 val musicInfo = musicList[position]
                 mMainMusicViewModel.setCurrentMusicId(musicInfo.songId.toString())
+                // 滑动开始时暂停播放
+//                if (musicInfo.isVideo) {
+//                    mMainMusicViewModel.pauseVideo()
+//                } else {
+//                    mMainMusicViewModel.pauseMusic()
+//                }
+                // 无论播放/暂停，都强制跳转进度
                 mMainMusicViewModel.seekToPercent(progress)
+
+                // 手动更新进度条UI（避免被ViewModel的旧进度覆盖）
+//                mMusicRecycleViewAdapter.updateItemProgress(position, progress, currentTime)
+//                if (musicInfo.isVideo) {
+//                    mMainMusicViewModel.resumeVideo()
+//                } else {
+//                    mMainMusicViewModel.resumeMusic()
+//                }
+
             }
         })
 

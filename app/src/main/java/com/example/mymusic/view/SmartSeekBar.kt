@@ -9,6 +9,7 @@ import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.LayerDrawable
 import android.util.AttributeSet
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewTreeObserver.OnGlobalLayoutListener
@@ -187,6 +188,7 @@ class SmartSeekBar @JvmOverloads constructor(
 
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
+                Log.d("MyMusic","SmartSeekBar的MotionEvent.ACTION_DOWN")
                 viewPager2?.let {
                     it.requestDisallowInterceptTouchEvent(true)
                     isInterceptDisabled = true
@@ -231,6 +233,8 @@ class SmartSeekBar @JvmOverloads constructor(
             }
 
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                Log.d("MyMusic","SmartSeekBar的MMotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL")
+
                 // 触摸结束，恢复 ViewPager2 拦截事件
                 viewPager2?.let {
                     it.requestDisallowInterceptTouchEvent(false)
