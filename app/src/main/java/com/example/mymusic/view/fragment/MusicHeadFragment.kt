@@ -29,10 +29,6 @@ class MusicHeadFragment : BaseMusicFragment() {
     // 保存对 MainMusicFragment 的引用
     private var mainMusicFragment: MainMusicFragment? = null
 
-
-    // 页面数量
-    private val NUM_PAGES = 3
-
     override fun getLayoutResId(): Int = R.layout.fragment_music_head
 
     override fun initView() {

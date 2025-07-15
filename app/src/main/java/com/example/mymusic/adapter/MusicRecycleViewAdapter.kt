@@ -1,6 +1,7 @@
 package com.example.mymusic.adapter
 
 import android.animation.Animator
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
 import android.view.LayoutInflater
@@ -36,8 +37,8 @@ class MusicRecycleViewAdapter(
 
     // 持有RecyclerView引用
     private var mRecyclerView: RecyclerView? = null
-    // 当前中心页
-    var currentCenterPosition: Int = 0
+    // 当前中心页 Playing
+//    var currentCenterPosition: Int = 0
     // 提供外部设置RecyclerView的方法（在Fragment中调用）
     fun setRecyclerView(recyclerView: RecyclerView) {
         this.mRecyclerView = recyclerView
@@ -126,9 +127,10 @@ class MusicRecycleViewAdapter(
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        Log.d("MyMusic","onBindViewHolder  position 是 $position,")
         val musicInfo = infoList[position]
         val bgResId = getRandomBgResId(holder.itemView.context, position)
-        val isCurrent = position == currentCenterPosition
+
         when (holder) {
             is MusicViewHolder -> {
                 holder.bind(musicInfo)
@@ -136,7 +138,7 @@ class MusicRecycleViewAdapter(
 
             }
             is VideoViewHolder -> {
-                holder.bind(musicInfo, isCurrent)
+                holder.bind(musicInfo)
                 holder.itemRootLayout.setBackgroundResource(bgResId)
             }
         }
@@ -157,7 +159,9 @@ class MusicRecycleViewAdapter(
     ) {
         if (payloads.isNotEmpty()) {
             val payload = payloads[0] as? Map<*, *> ?: return
+            Log.e("MyMusic", " position onBindViewHolder的局部刷新payloads")
             when (holder) {
+
                 is MusicViewHolder -> {
                     // 音乐项局部刷新
                     payload["title"]?.let { holder.tvTitle.text = it as String }
@@ -182,7 +186,7 @@ class MusicRecycleViewAdapter(
                     payload["singer"]?.let { holder.tvSinger.text = it as String }
                     payload["liked"]?.let { holder.updateLikeStatus(it as Boolean) }
                     payload["likeCount"]?.let {
-                        holder.tvLikeCount.text = formatCount(it as Int)  // 局部刷新时格式化
+                        holder.tvLikeCount.text = formatCount(it as Int)
                     }
                 }
             }
@@ -455,7 +459,7 @@ class MusicRecycleViewAdapter(
 
 
 
-        fun bind(musicInfo: MusicInfo,isCurrent: Boolean) {
+        fun bind(musicInfo: MusicInfo) {
             tvTitle.text = musicInfo.title
             tvSinger.text = musicInfo.singer
             tvFollow.text = if (musicInfo.followed) "已关注" else "关注"
@@ -510,6 +514,7 @@ class MusicRecycleViewAdapter(
             tvCurrentTime.visibility= View.GONE
             tvTotalTime.visibility= View.GONE
 
+
             // 使用通用方法设置关注按钮
             setupFollowButton(tvFollow, musicInfo, adapterPosition, onItemActionListener)
 
@@ -522,8 +527,11 @@ class MusicRecycleViewAdapter(
              */
             playerView.useController = false
             val videoUrl = viewModel.getVideoUrlBySongId(musicInfo.songId)
-
-            // 重置播放器状态
+            // 获取当前歌曲在歌单中的位置索引
+            val songPositionInList = viewModel._playlist?.value?.indexOfFirst { it.songId == musicInfo.songId }
+            // 判断是否为当前播放项
+            val isCurrent =layoutPosition.toString()== songPositionInList.toString()
+            Log.d("isCurrent","Glide    isCurrent 是 $isCurrent")
             if(!isCurrent){
                 // 加载视频封面
                 Glide.with(itemView.context)
@@ -532,9 +540,13 @@ class MusicRecycleViewAdapter(
                     .frame(0) // 加载第0毫秒的帧作为封面图
                     .into(thumbnailImageView)
             }
+            // 设置可见性监听
+            setupVisibilityListener()
 
             if (isCurrent) {
                 // 当前页：显示播放器
+
+                //封面都加载，播放视频时候取消封面
                 thumbnailImageView.visibility = View.GONE
                 playerView.visibility = View.VISIBLE
 
@@ -550,13 +562,12 @@ class MusicRecycleViewAdapter(
                             firstFrameRendered = true
                         }
                     }
-                })
-                viewModel.sharedPlayer.addListener(object : Player.Listener {
                     override fun onPlaybackStateChanged(state: Int) {
                         if (state == Player.STATE_READY) {
                             // 启动进度更新（确保播放时才启动）
-//                            viewModel.startProgressUpdates() // 准备就绪后启动更新
                             val duration = viewModel.sharedPlayer.duration
+                            // 补充：就绪后强制刷新播放器视图
+//                            playerView.invalidate()
                             Log.d("MyMusic", "视频时长：${duration}毫秒") // 检查是否正常
                             thumbnailImageView.visibility = View.GONE
                             Log.d("MyMusic", "关闭封面") // 检查是否正常
@@ -585,7 +596,17 @@ class MusicRecycleViewAdapter(
 
         }
 
-
+        // VideoViewHolder类中添加监听方法
+        fun setupVisibilityListener() {
+            thumbnailImageView.viewTreeObserver.addOnGlobalLayoutListener {
+                if (thumbnailImageView.visibility == View.VISIBLE) {
+                    // 打印"位置：${adapterPosition}"，即当前项在列表中的索引
+                    Log.d("Thumbnail", "封面图显示（位置：${adapterPosition}）")
+                } else {
+                    Log.d("Thumbnail", "封面图隐藏（位置：${adapterPosition}）")
+                }
+            }
+        }
 
         fun pauseVideo() {
             viewModel.sharedPlayer.pause()
@@ -614,8 +635,8 @@ class MusicRecycleViewAdapter(
             Log.d("ViewRecycled", "ViewHolder回收，解绑PlayerView")
             holder.firstFrameRendered = false // 重置第一帧渲染状态
             // 隐藏playerView，显示封面图（避免复用时显示旧画面）
-            holder.playerView.visibility = View.GONE
-            holder.thumbnailImageView.visibility = View.VISIBLE
+//            holder.thumbnailImageView.visibility = View.VISIBLE
+//            holder.playerView.visibility = View.GONE
         }
         super.onViewRecycled(holder)
     }
@@ -703,5 +724,10 @@ class MusicRecycleViewAdapter(
 
     fun setOnItemActionListener(listener: OnItemActionListener) {
         this.onItemActionListener = listener
+    }
+
+    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
+        super.onDetachedFromRecyclerView(recyclerView)
+//        currentCenterPosition=mRecyclerView.ad
     }
 }

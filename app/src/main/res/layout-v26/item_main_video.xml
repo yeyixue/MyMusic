@@ -41,7 +41,7 @@
                 android:layout_height="match_parent"
                 android:scaleType="centerCrop"
                 android:visibility="visible"
-                android:background="@android:color/black"/>
+                android:background="@color/blue"/>
             <androidx.media3.ui.PlayerView
                 android:id="@+id/playerView"
                 android:layout_width="match_parent"
