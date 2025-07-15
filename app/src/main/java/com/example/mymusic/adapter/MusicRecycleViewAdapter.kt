@@ -252,6 +252,7 @@ class MusicRecycleViewAdapter(
             seekBar.setTotalDuration(musicInfo.duration)
             // 3. 初始化缓冲进度
             seekBar.setBufferProgress(0)
+            Log.d("SmartSeekBar","音乐setOnProgressActionListener  ${seekBar.hashCode()}")
 
             // 4. 设置 SmartSeekBar 的核心监听（替代 SeekBarUtils） 音乐
             seekBar.setOnProgressActionListener(object : SmartSeekBar.OnProgressActionListener {
@@ -263,6 +264,7 @@ class MusicRecycleViewAdapter(
                     formattedTime: String,
                     fromUser: Boolean
                 ) {
+
 //                    // 仅处理用户交互导致的进度变化---这个要写 不然没反应
                     if (fromUser) {
                         ProgressListenerManager.progressListener?.onProgressUpdate(adapterPosition, progress,formattedTime,tvTotalTime.text.toString())
@@ -483,6 +485,7 @@ class MusicRecycleViewAdapter(
             seekBar.setTotalDuration(musicInfo.duration)
             // 3. 初始化缓冲进度
             seekBar.setBufferProgress(0)
+            Log.d("SmartSeekBar","视频setOnProgressActionListener     ${seekBar.hashCode()}")
 
             // 4. 设置 SmartSeekBar 的核心监听（替代 SeekBarUtils） 视频
             seekBar.setOnProgressActionListener(object : SmartSeekBar.OnProgressActionListener {
