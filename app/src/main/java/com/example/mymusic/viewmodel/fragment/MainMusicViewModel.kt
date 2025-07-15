@@ -2,6 +2,7 @@ package com.example.mymusic.viewmodel.fragment
 
 import android.app.Application
 import android.content.Context
+import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Handler
 import android.os.Looper
@@ -20,11 +21,11 @@ import com.example.mymusic.adapter.MusicRecycleViewAdapter
 import com.example.mymusic.repo.entity.MusicInfo
 import com.example.mymusic.repo.remote.ApiService
 import com.example.mymusic.repo.remote.RetrofitConnection
-
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import java.util.concurrent.TimeUnit
+
 class MainMusicViewModel(application: Application) : AndroidViewModel(application) {
 
     private val apiService: ApiService = RetrofitConnection.apiService
@@ -34,7 +35,7 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     private val disposables = CompositeDisposable()
-    internal val _playlist = MutableLiveData<List<MusicInfo>>(emptyList())
+    private val _playlist = MutableLiveData<List<MusicInfo>>(emptyList())
     val playlist: LiveData<List<MusicInfo>> = _playlist
 
     // 当前选中的音乐id（使用LiveData便于UI观察变化）
@@ -44,6 +45,8 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
     private val _isPlaying = MutableLiveData<Boolean>(false)
     val isPlaying: LiveData<Boolean> = _isPlaying
 
+    // 播放器核心
+//    lateinit var mediaPlayer: ExoPlayer
 
     internal val mediaPlayer = MediaPlayer()
     private var isMediaPrepared = false // 标记播放器是否准备完成
@@ -439,9 +442,14 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
 
 
     // 播放视频时更新状态
-    fun playVideo(position: Int, currentMusic:MusicInfo,  mRecyclerView: RecyclerView) {
+    fun playVideo(position: Int, currentMusic:MusicInfo,  mRecyclerView: RecyclerView,currentCenterPosition:Int) {
 
 
+        val oldHolder = mRecyclerView.findViewHolderForAdapterPosition(currentCenterPosition)
+        if (oldHolder is MusicRecycleViewAdapter.VideoViewHolder) {
+            oldHolder.playerView.player = null // 强制解除旧视图绑定
+            Log.d("PlayVideo", "解绑上一个页面的 PlayerView: $currentCenterPosition")
+        }
         // // 1. 获取当前可见的ViewHolder（必须是可见的，未被回收）---因为要处理视频封面
         val viewHolder = mRecyclerView.findViewHolderForAdapterPosition(position)
         if (viewHolder !is MusicRecycleViewAdapter.VideoViewHolder) {
@@ -456,8 +464,8 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
         player.clearMediaItems() // 清除旧媒体
 
         // 2. 绑定新页面的 PlayerView
-//        viewHolder.thumbnailImageView.visibility = View.GONE
-//        viewHolder.playerView.visibility = View.VISIBLE
+        viewHolder.playerView.visibility = View.VISIBLE
+        viewHolder.thumbnailImageView.visibility = View.GONE
         viewHolder.playerView.player = player // 绑定新视图
 
         // 3. 加载新视频
@@ -478,7 +486,12 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
         startProgressUpdates()
     }
 
-    private var musicList: List<MusicInfo> = emptyList()
+    fun resetPlayer() {
+        if (::sharedPlayer.isInitialized) {
+            sharedPlayer.stop()
+            sharedPlayer.clearMediaItems()
+        }
+    }
 
 
     override fun onCleared() {

@@ -29,6 +29,7 @@ import kotlin.times
 
 
 class MainMusicFragment : BaseMusicFragment() {
+//    internal lateinit var mMainMusicViewModel: MainMusicViewModel
 
     // 使用 by lazy 实现延迟初始化
     val mMainMusicViewModel: MainMusicViewModel by lazy {
@@ -43,11 +44,13 @@ class MainMusicFragment : BaseMusicFragment() {
     private lateinit var mMusicRecycleViewAdapter: MusicRecycleViewAdapter
     private lateinit var mRecyclerView: RecyclerView
     // 在 setupRecyclerView() 的滚动监听中添加
+    private var isInitialScroll = true // 新增标记
     // 记录当前播放的歌曲ID和中心页面位置
     private val _currentPlayingSongId = MutableLiveData<String?>()
     var currentPlayingSongId: LiveData<String?> = _currentPlayingSongId
-    private var currentCenterPosition: Int = 0
+    private var currentCenterPosition: Int = -1
 
+    // 修正列表声明语法（初始为空列表）
     private var musicList: List<MusicInfo> = emptyList()
 
     override fun getLayoutResId(): Int {
@@ -94,7 +97,7 @@ class MainMusicFragment : BaseMusicFragment() {
                     }else{
                         currentCenterPosition = 0
                         _currentPlayingSongId.value = firstMusic.songId.toString()
-                        mMainMusicViewModel.playVideo(currentCenterPosition,firstMusic,mRecyclerView)
+                        mMainMusicViewModel.playVideo(currentCenterPosition,firstMusic,mRecyclerView,currentCenterPosition)
                     }
                 }
             }
@@ -140,7 +143,7 @@ class MainMusicFragment : BaseMusicFragment() {
         // 设置进度更新监听,这是adapter的拖动回调处理逻辑--播放进度更新接口
         mMusicRecycleViewAdapter.setOnPlayProgressListener(object : ProgressListenerManager.OnPlayProgressListener {
             override fun onProgressUpdate(position: Int, progress: Int, currentTime: String, totalTime: String) {
-                // 用户拖动进度条时，更新ViewModel  pos
+                // 用户拖动进度条时，更新ViewModel
                 val musicInfo = musicList[position]
                 mMainMusicViewModel.setCurrentMusicId(musicInfo.songId.toString())
                 // 滑动开始时暂停播放
@@ -198,9 +201,6 @@ class MainMusicFragment : BaseMusicFragment() {
                         }
                         // 更新当前中心位置
                         currentCenterPosition = newCenterPosition
-                        // 更新当前播放ID
-                        _currentPlayingSongId.value = newMusic.songId.toString()
-//                        mMusicRecycleViewAdapter.currentCenterPosition = currentCenterPosition
                         if(newMusic.isVideo==false){
                             mMainMusicViewModel.switchToAudioPlayback()
                             //播放音乐
@@ -217,11 +217,14 @@ class MainMusicFragment : BaseMusicFragment() {
                         }else{
                             //处理播放视频
 //                            mMainMusicViewModel.pauseVideo()
-//                            Log.d("Mymusic","playVideo(currentCenterPosition) currentCenterPosition是 $currentCenterPosition ")
-                            mMainMusicViewModel.playVideo(currentCenterPosition,newMusic,mRecyclerView)
+//                            mMainMusicViewModel.resetPlayer()
+                            Log.d("Mymusic","playVideo(currentCenterPosition) currentCenterPosition是 $currentCenterPosition ")
+                            mMainMusicViewModel.playVideo(currentCenterPosition,newMusic,mRecyclerView,currentCenterPosition)
 //                            mMainMusicViewModel.startProgressUpdates()
                         }
-
+                        // 更新当前播放ID
+                        _currentPlayingSongId.value = newMusic.songId.toString()
+                        mMusicRecycleViewAdapter.currentCenterPosition = currentCenterPosition
                     }
                 }
             }
@@ -259,7 +262,7 @@ class MainMusicFragment : BaseMusicFragment() {
             // 格式化当前时间（复用ViewModel的格式化方法）
             val formattedTime = mMainMusicViewModel.formatTime(currentPosition.toInt())
             // 获取当前中心位置（音频和视频共用同一个位置标记）
-//            val currentPlayingPosition = mMusicRecycleViewAdapter.currentCenterPosition
+            val currentPlayingPosition = mMusicRecycleViewAdapter.currentCenterPosition
 
             // 日志调试：区分音频/视频进度
             val mediaType = if (mMainMusicViewModel.isPlayingVideo) "视频" else "音频"
@@ -268,7 +271,7 @@ class MainMusicFragment : BaseMusicFragment() {
 
             // 更新进度条（统一调用适配器方法）
             mMusicRecycleViewAdapter.updateItemProgress(
-                currentCenterPosition,
+                currentPlayingPosition,
                 progressPercent,
                 formattedTime
             )
