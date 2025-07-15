@@ -142,7 +142,7 @@ class MusicRecycleViewAdapter(
         }
 
     }
-
+    //
     override fun onViewAttachedToWindow(holder: RecyclerView.ViewHolder) {
         super.onViewAttachedToWindow(holder)
 //        if (holder is VideoViewHolder) {
