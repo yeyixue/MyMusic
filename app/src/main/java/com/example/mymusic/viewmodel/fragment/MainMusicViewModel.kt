@@ -442,9 +442,14 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
 
 
     // 播放视频时更新状态
-    fun playVideo(position: Int, currentMusic:MusicInfo,  mRecyclerView: RecyclerView) {
+    fun playVideo(position: Int, currentMusic:MusicInfo,  mRecyclerView: RecyclerView,currentCenterPosition:Int) {
 
 
+        val oldHolder = mRecyclerView.findViewHolderForAdapterPosition(currentCenterPosition)
+        if (oldHolder is MusicRecycleViewAdapter.VideoViewHolder) {
+            oldHolder.playerView.player = null // 强制解除旧视图绑定
+            Log.d("PlayVideo", "解绑上一个页面的 PlayerView: $currentCenterPosition")
+        }
         // // 1. 获取当前可见的ViewHolder（必须是可见的，未被回收）---因为要处理视频封面
         val viewHolder = mRecyclerView.findViewHolderForAdapterPosition(position)
         if (viewHolder !is MusicRecycleViewAdapter.VideoViewHolder) {
@@ -481,7 +486,12 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
         startProgressUpdates()
     }
 
-
+    fun resetPlayer() {
+        if (::sharedPlayer.isInitialized) {
+            sharedPlayer.stop()
+            sharedPlayer.clearMediaItems()
+        }
+    }
 
 
     override fun onCleared() {

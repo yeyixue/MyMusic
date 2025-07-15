@@ -97,7 +97,7 @@ class MainMusicFragment : BaseMusicFragment() {
                     }else{
                         currentCenterPosition = 0
                         _currentPlayingSongId.value = firstMusic.songId.toString()
-                        mMainMusicViewModel.playVideo(currentCenterPosition,firstMusic,mRecyclerView)
+                        mMainMusicViewModel.playVideo(currentCenterPosition,firstMusic,mRecyclerView,currentCenterPosition)
                     }
                 }
             }
@@ -217,8 +217,9 @@ class MainMusicFragment : BaseMusicFragment() {
                         }else{
                             //处理播放视频
 //                            mMainMusicViewModel.pauseVideo()
+//                            mMainMusicViewModel.resetPlayer()
                             Log.d("Mymusic","playVideo(currentCenterPosition) currentCenterPosition是 $currentCenterPosition ")
-                            mMainMusicViewModel.playVideo(currentCenterPosition,newMusic,mRecyclerView)
+                            mMainMusicViewModel.playVideo(currentCenterPosition,newMusic,mRecyclerView,currentCenterPosition)
 //                            mMainMusicViewModel.startProgressUpdates()
                         }
                         // 更新当前播放ID
