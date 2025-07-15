@@ -43,16 +43,8 @@ class MyMusicActivity : BaseMusicActivity() {
     override fun initData() {
         setViewPager()
 
-        setMusicDefault()
-
     }
 
-    private fun setMusicDefault() {
-//        // 启动的时候从网络获取歌单，
-//        mMyMusicViewModel.setPlayListDefault()
-
-        //在播放页设置启动音乐
-    }
 
     fun setViewPager(){
         // 这个顺序就是页面显示的顺序
@@ -79,7 +71,8 @@ class MyMusicActivity : BaseMusicActivity() {
 //        viewPager.currentItem = 1
         // 设置页面切换动画
         viewPager.setPageTransformer(DepthPageTransformer())
-        viewPager.offscreenPageLimit=2
+        //这会导致左右两侧的 Fragment 都被预加载并初始化（包括设置点击监听）。
+//        viewPager.offscreenPageLimit=1
 
         viewPager.registerOnPageChangeCallback(object: ViewPager2.OnPageChangeCallback(){
             // 记录滑动方向
@@ -123,17 +116,4 @@ class MyMusicActivity : BaseMusicActivity() {
         })
     }
 
-    // 判断滑动方向（根据当前事件和上次事件的X坐标比较）
-    private var lastX = 0f
-    private fun isSwipingLeft(event: MotionEvent): Boolean {
-        val isLeft = event.x < lastX
-        lastX = event.x
-        return isLeft
-    }
-
-    private fun isSwipingRight(event: MotionEvent): Boolean {
-        val isRight = event.x > lastX
-        lastX = event.x
-        return isRight
-    }
 }

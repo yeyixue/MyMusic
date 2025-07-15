@@ -266,7 +266,7 @@ class MainMusicFragment : BaseMusicFragment() {
             // 日志调试：区分音频/视频进度
             val mediaType = if (mMainMusicViewModel.isPlayingVideo) "视频" else "音频"
 //            Log.d("ProgressUpdate", "$mediaType 进度: $progressPercent%，位置: $currentPlayingPosition")
-            Log.d("ProgressUpdate", "currentPlayingPosition: $currentPlayingPosition，progressPercent: $progressPercent")
+//            Log.d("ProgressUpdate", "currentPlayingPosition: $currentPlayingPosition，progressPercent: $progressPercent")
 
             // 更新进度条（统一调用适配器方法）
             mMusicRecycleViewAdapter.updateItemProgress(

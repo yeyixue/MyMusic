@@ -1,15 +1,101 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#9DB4EB"
-    tools:context=".view.fragment.MusicStyleFragment">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@color/black"
+    android:orientation="vertical"
+    tools:context=".view.fragment.FindMusicFragment">
 
     <!-- TODO: Update blank fragment layout -->
     <TextView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="music style" />
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:gravity="left"
+        android:text="听歌模式"
+        android:textColor="#FFFFFF"
+        android:layout_marginLeft="15dp"
+        android:layout_marginTop="25dp"
+        android:layout_marginBottom="15dp"
+        android:textSize="22sp"/>
 
-</FrameLayout>
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginHorizontal="20dp"
+        app:cardCornerRadius="20dp"
+        android:background="@color/white">
+
+        <TextView
+            android:id="@+id/tvFamiliarMode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="默认模式"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            android:layout_gravity="center"/>
+    </androidx.cardview.widget.CardView>
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="20dp"
+        app:cardCornerRadius="20dp"
+        app:cardBackgroundColor="@color/musicstyle">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="熟悉模式"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            android:layout_gravity="center"/>
+    </androidx.cardview.widget.CardView>
+    <androidx.cardview.widget.CardView
+        android:id="@+id/imageViewMusicPicture"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="20dp"
+        app:cardCornerRadius="20dp"
+        app:cardBackgroundColor="@color/musicstyle">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="新鲜模式"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            android:layout_gravity="center"/>
+    </androidx.cardview.widget.CardView>
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="20dp"
+        app:cardCornerRadius="20dp"
+        app:cardBackgroundColor="@color/musicstyle">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycleViewMusicStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="20dp"
+            tools:listitem="@layout/item_music_style"
+            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+            android:contentDescription="风格页面"
+            android:layout_gravity="center"
+            >
+        </androidx.recyclerview.widget.RecyclerView>
+
+
+    </androidx.cardview.widget.CardView>
+
+
+
+</LinearLayout>

@@ -60,17 +60,6 @@ class MusicHeadFragment : BaseMusicFragment() {
         mBottNavigationView.menu.findItem(R.id.main).title = ""
         // 正确设置底部导航栏的选中项
         mBottNavigationView.selectedItemId = R.id.main // 使用资源ID而不是位置索引
-
-        // 监听 currentPlayingSongId 的变化
-//        mainMusicFragment?.currentPlayingSongId?.observe(viewLifecycleOwner, Observer { songId ->
-//            Log.d("MusicHeadFragment", "当前播放歌曲ID变化 → $songId")
-//            mBottNavigationView.menu.findItem(R.id.main).icon = resources.getDrawable(R.mipmap.runing, null)
-//        })
-        // 监听播放状态变化，通过回调传递状态给 updatePlayIcon--在下面的onViewCreated里面使用
-//        mainMusicFragment?.mMainMusicViewModel?.isPlaying?.observe(viewLifecycleOwner) { isPlaying ->
-//            mMusicHeadViewModel.updatePlayIcon(mBottNavigationView.menu.findItem(R.id.main), isPlaying,resources)
-//        }
-
     }
 
     override fun setListener() {

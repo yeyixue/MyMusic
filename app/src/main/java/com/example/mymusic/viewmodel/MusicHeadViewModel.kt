@@ -7,7 +7,7 @@ import com.example.mymusic.R
 
 class MusicHeadViewModel: ViewModel() {
 
-    // 更新播放图标的辅助方法
+    // 更新播放图标
    fun updatePlayIcon(menuItem: MenuItem, isPlaying: Boolean,resources: Resources) {
         menuItem.title = ""
         menuItem.icon = if (isPlaying) {

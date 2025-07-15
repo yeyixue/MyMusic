@@ -1,9 +1,6 @@
 package com.example.mymusic.adapter
 
 import android.animation.Animator
-import android.animation.AnimatorSet
-import android.animation.ObjectAnimator
-import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
 import android.view.LayoutInflater
@@ -14,7 +11,6 @@ import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
-import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -40,8 +36,6 @@ class MusicRecycleViewAdapter(
 
     // 持有RecyclerView引用
     private var mRecyclerView: RecyclerView? = null
-    // 声明进度跳转监听器（新增）
-    private var onSeekListener: OnSeekListener? = null
     // 当前中心页
     var currentCenterPosition: Int = 0
     // 提供外部设置RecyclerView的方法（在Fragment中调用）
@@ -147,17 +141,13 @@ class MusicRecycleViewAdapter(
             }
         }
 
-        holder.itemView.setOnClickListener {
-            onItemClickListener?.onItemClick(musicInfo)
-        }
-
     }
 
     override fun onViewAttachedToWindow(holder: RecyclerView.ViewHolder) {
         super.onViewAttachedToWindow(holder)
-        if (holder is VideoViewHolder) {
-            holder.setIsRecyclable(false) // 防止被系统回收
-        }
+//        if (holder is VideoViewHolder) {
+//            holder.setIsRecyclable(false) // 防止被系统回收
+//        }
     }
 
     override fun onBindViewHolder(
@@ -167,7 +157,6 @@ class MusicRecycleViewAdapter(
     ) {
         if (payloads.isNotEmpty()) {
             val payload = payloads[0] as? Map<*, *> ?: return
-            val musicInfo = infoList[position]
             when (holder) {
                 is MusicViewHolder -> {
                     // 音乐项局部刷新
@@ -403,7 +392,7 @@ class MusicRecycleViewAdapter(
     }
     // 适配器层的updateItemProgress方法（用于外部调用）
     fun updateItemProgress(position: Int, progress: Int, currentTime: String) {
-        Log.d("updateItemProgress", "fun updateItemProgress(position: Int, progress: Int, currentTime: String) ")
+//        Log.d("updateItemProgress", "fun updateItemProgress(position: Int, progress: Int, currentTime: String) ")
         if (position < 0 || position >= infoList.size) return // 校验位置合法性
         // 通过RecyclerView获取对应位置的ViewHolder
         val viewHolder = mRecyclerView?.findViewHolderForAdapterPosition(position)
@@ -429,11 +418,8 @@ class MusicRecycleViewAdapter(
 
     // 用于生成随机背景的工具方法  mipmap/bg0-bg4
     private fun getRandomBgResId(context: Context, position: Int): Int {
-        // 方案1：根据位置固定背景（同位置固定同一张图，滚动时不会变）
+        // 根据位置固定背景
         val fixedIndex = position % 8 // 0-4循环（确保每个位置对应固定图片）
-
-        // 方案2：完全随机（每次绑定可能变，适合动态效果）
-        // val randomIndex = (0..4).random()
 
         val bgName = "bg$fixedIndex"
         // 转换为资源ID
@@ -598,14 +584,7 @@ class MusicRecycleViewAdapter(
             }
 
         }
-        // 更新进度条显示
-//        fun updateProgress(progress: Int, formattedTime: String) {
-//            if (!seekBar.isDragging) { // 避免用户拖动时
-////                Log.d("SeekBarUpdate", "进度条更新: $progress%")
-//                seekBar.updateMediaProgress(progress)
-//                tvCurrentTime.text = formattedTime
-//            }
-//        }
+
 
 
         fun pauseVideo() {
@@ -698,16 +677,7 @@ class MusicRecycleViewAdapter(
         }
     }
 
-    // 点击事件接口
-    interface OnItemClickListener {
-        fun onItemClick(musicInfo: MusicInfo)
-    }
 
-    // 交互事件接口
-    interface OnItemActionListener {
-        fun onFollowStatusChanged(position: Int, isFollowed: Boolean)
-        fun onLikeStatusChanged(position: Int, isLiked: Boolean)
-    }
 
     // 播放进度更新接口
     object ProgressListenerManager {
@@ -722,23 +692,14 @@ class MusicRecycleViewAdapter(
         ProgressListenerManager.progressListener = listener
     }
 
-    // 进度跳转回调接口
-    interface OnSeekListener {
-        // position：当前item的位置；seekToMillis：需要跳转到的毫秒数
-        fun onSeek(position: Int, seekToMillis: Int)
-    }
-    // 提供外部设置监听器的方法（新增）
-    fun setOnSeekListener(listener: OnSeekListener) {
-        this.onSeekListener = listener
-    }
 
 
-    private var onItemClickListener: OnItemClickListener? = null
+    // 交互事件接口
+    interface OnItemActionListener {
+        fun onFollowStatusChanged(position: Int, isFollowed: Boolean)
+        fun onLikeStatusChanged(position: Int, isLiked: Boolean)
+    }
     private var onItemActionListener: OnItemActionListener? = null
-
-    fun setOnItemClickListener(listener: OnItemClickListener) {
-        this.onItemClickListener = listener
-    }
 
     fun setOnItemActionListener(listener: OnItemActionListener) {
         this.onItemActionListener = listener

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@color/black"
+    android:layout_marginBottom="10dp"
+    android:padding="2dp"
+    android:layout_height="80dp">
+
+    <ImageView
+        android:id="@+id/ivplaylist"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:src="@mipmap/tiktok"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:padding="2dp"
+        android:background="#767676"
+        app:layout_constraintBottom_toBottomOf="parent"/>
+
+    <TextView
+        android:id="@+id/playlisttitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="抖音收藏的音乐"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        android:textSize="15dp"
+        android:layout_marginLeft="30dp"
+        app:layout_constraintLeft_toRightOf="@id/ivplaylist"
+        app:layout_constraintBottom_toTopOf="@id/linearLayoutSongnum"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"/>
+    <LinearLayout
+        android:id="@+id/linearLayoutSongnum"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginLeft="30dp"
+        app:layout_constraintLeft_toRightOf="@id/ivplaylist"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/playlisttitle">
+
+        <ImageView
+            android:id="@+id/ivLock"
+            android:layout_width="15dp"
+            android:layout_height="15dp"
+            android:layout_marginRight="5dp"
+            android:src="@mipmap/lock"/>
+        <TextView
+            android:id="@+id/songNumText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="15dp"
+            android:text="62 首"
+            android:textColor="#ABAAAA"/>
+    </LinearLayout>
+
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

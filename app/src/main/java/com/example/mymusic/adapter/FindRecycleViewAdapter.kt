@@ -94,8 +94,6 @@ class FindRecycleViewAdapter (
      */
     fun setOnItemClickListener(listener: OnItemClickListener) {
         this.onItemClickListener = listener
-
-
     }
 }
 

@@ -1,15 +1,205 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/black"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".view.fragment.MyMusicFragment">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/constaintLayoutBg"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent">
+        <ImageView
+            android:id="@+id/imageviewMyMusic"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:scaleType="fitXY"
+            android:alpha="0.7"
+            android:src="@mipmap/mybg"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/constaintLayoutMyMsg"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/constaintLayoutBg"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent">
+
+
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/imageviewMyHeadCardView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:layout_marginHorizontal="20dp"
+            app:cardCornerRadius="250dp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:cardElevation="2dp">
+            <ImageView
+                android:id="@+id/imageviewMyHead"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+
+                android:scaleType="fitXY"
+                android:src="@mipmap/img5"/>
+        </androidx.cardview.widget.CardView>
+
+
+        <TextView
+            android:id="@+id/tvUserName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/imageviewMyHeadCardView"
+            android:textSize="20dp"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            android:gravity="center"
+            android:layout_marginTop="20dp"
+            android:text="测试账号" />
+
+        <LinearLayout
+            android:id="@+id/linearLayoutAttention"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            app:layout_constraintTop_toBottomOf="@id/tvUserName"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            android:layout_marginVertical="20dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvfollow"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/imageviewMyHead"
+                android:textSize="15dp"
+                android:textStyle="bold"
+                android:textColor="#CAC8C8"
+                android:gravity="center"
+                android:text="20" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/imageviewMyHead"
+                android:textSize="15dp"
+                android:textStyle="bold"
+                android:textColor="#A4A3A3"
+                android:gravity="center"
+                android:layout_marginLeft="10dp"
+                android:text="关注" />
+
+
+
+            <TextView
+                android:id="@+id/tvfollowed"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/imageviewMyHead"
+                android:textSize="15dp"
+                android:textStyle="bold"
+                android:textColor="#CAC8C8"
+                android:gravity="center"
+                android:layout_marginLeft="30dp"
+                android:text="123" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/imageviewMyHead"
+                android:textSize="15dp"
+                android:textStyle="bold"
+                android:textColor="#A4A3A3"
+                android:gravity="center"
+                android:layout_marginLeft="10dp"
+                android:text="粉丝" />
+
+
+            <TextView
+                android:id="@+id/tvBeLiked"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/imageviewMyHead"
+                android:textSize="15dp"
+                android:textStyle="bold"
+                android:textColor="#CAC8C8"
+                android:gravity="center"
+                android:layout_marginLeft="30dp"
+                android:text="312" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/imageviewMyHead"
+                android:textSize="15dp"
+                android:textStyle="bold"
+                android:textColor="#A4A3A3"
+                android:gravity="center"
+                android:layout_marginLeft="10dp"
+                android:text="获赞" />
+
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+
+    <androidx.constraintlayout.widget.ConstraintLayout
 
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        android:layout_height="wrap_content"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/constaintLayoutMyMsg">
 
-</FrameLayout>
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tabsMyMusic"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            app:tabMode="fixed"
+            android:background="@color/black"
+            app:tabTextColor="@color/white"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tabTextAppearance="@style/TabLayoutTextStyle"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"/>
+
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/myViewPager"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/tabsMyMusic"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -66,7 +66,7 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
     init {
 
         mediaPlayer.setOnSeekCompleteListener {
-            Log.d("Music"," mediaPlayer.setOnSeekCompleteListener 更新缓冲进度是${mediaPlayer.currentPosition}")
+//            Log.d("Music"," mediaPlayer.setOnSeekCompleteListener 更新缓冲进度是${mediaPlayer.currentPosition}")
 
         }
 
