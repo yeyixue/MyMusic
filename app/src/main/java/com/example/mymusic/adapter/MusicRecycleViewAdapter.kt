@@ -36,7 +36,7 @@ class MusicRecycleViewAdapter(
 
     // 持有RecyclerView引用
     private var mRecyclerView: RecyclerView? = null
-    // 当前中心页
+    // 记录当前中心页
     var currentCenterPosition: Int = 0
     // 提供外部设置RecyclerView的方法（在Fragment中调用）
     fun setRecyclerView(recyclerView: RecyclerView) {

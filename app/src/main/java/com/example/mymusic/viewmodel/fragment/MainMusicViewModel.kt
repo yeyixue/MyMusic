@@ -444,7 +444,7 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
     // 播放视频时更新状态
     fun playVideo(position: Int, currentMusic:MusicInfo,  mRecyclerView: RecyclerView,currentCenterPosition:Int) {
 
-
+        // 防止视频出现在别的页面
         val oldHolder = mRecyclerView.findViewHolderForAdapterPosition(currentCenterPosition)
         if (oldHolder is MusicRecycleViewAdapter.VideoViewHolder) {
             oldHolder.playerView.player = null // 强制解除旧视图绑定
@@ -484,13 +484,6 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
 
         // 开始监听进度
         startProgressUpdates()
-    }
-
-    fun resetPlayer() {
-        if (::sharedPlayer.isInitialized) {
-            sharedPlayer.stop()
-            sharedPlayer.clearMediaItems()
-        }
     }
 
 
