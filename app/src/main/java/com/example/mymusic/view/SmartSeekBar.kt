@@ -67,6 +67,8 @@ class SmartSeekBar @JvmOverloads constructor(
     // 需要设置setOnProgressActionListener，不然actionListener为空，导致fragment没法监听，progressListener弄成单例
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
+        Log.d("SmartSeekBar","setOnProgressActionListener")
+
         setOnProgressActionListener(object : SmartSeekBar.OnProgressActionListener {
             // 进度变化时触发（包括拖动过程和自动更新）
             override fun onProgressChanged(
@@ -163,8 +165,10 @@ class SmartSeekBar @JvmOverloads constructor(
         return String.format("%02d:%02d", minutes, seconds)
     }
 
-    // 平滑更新进度（内部动画逻辑）
+    // 平滑更新进度,媒体的跳转在viewmodel里面
     private fun smoothSetProgress(progress: Int) {
+        Log.d("SmartSeekBar","smoothSetProgress   progress  $progress")
+
         progressAnimator?.cancel()
         progressAnimator = ValueAnimator.ofInt(this.progress, progress).apply {
             duration = 200
@@ -275,7 +279,8 @@ class SmartSeekBar @JvmOverloads constructor(
 
                 Log.d("MyMusic","SmartSeekBar的MMotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL")
                 // 更新进度条的ui进度
-                smoothSetProgress(finalProgress)
+                // 这个注释掉是因为在viewmodel设置了progressRunnable去监听媒体的变化，然后更新进度条的进度，只不过可能会延迟响应一秒
+//                smoothSetProgress(finalProgress)
                 thumb = thumbNormal
                 updateLayerInset(insetNormal)
                 isDragging = false
@@ -308,7 +313,7 @@ class SmartSeekBar @JvmOverloads constructor(
     // 资源释放
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
-        Log.d("SmartSeekBar","onDetachedFromWindow")
+        Log.d("SmartSeekBar","onDetachedFromWindow  ${hashCode()}")
         progressAnimator?.cancel()
         progressAnimator = null
         actionListener = null
