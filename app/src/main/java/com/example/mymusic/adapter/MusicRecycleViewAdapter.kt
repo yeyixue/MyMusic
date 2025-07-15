@@ -497,7 +497,7 @@ class MusicRecycleViewAdapter(
                     formattedTime: String,
                     fromUser: Boolean
                 ) {
-//                    // 仅处理用户交互导致的进度变化---这个要写 不然没反应
+//                    // 仅处理用户交互导致的进度变化---这个要写 不然没反应！
                     if (fromUser) {
                         ProgressListenerManager.progressListener?.onProgressUpdate(adapterPosition, progress,formattedTime,tvTotalTime.text.toString())
                     }
