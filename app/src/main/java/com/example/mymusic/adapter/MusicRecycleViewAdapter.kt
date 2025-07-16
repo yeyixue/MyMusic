@@ -252,31 +252,31 @@ class MusicRecycleViewAdapter(
             seekBar.setTotalDuration(musicInfo.duration)
             // 3. 初始化缓冲进度
             seekBar.setBufferProgress(0)
-            Log.d("SmartSeekBar","音乐setOnProgressActionListener  ${seekBar.hashCode()}")
+            Log.d("SmartSeekBar","音乐类型ViewHolder初始化ActionListener 该holder的seekBar对应hashcode 是  ${seekBar.hashCode()}")
 
             // 4. 设置 SmartSeekBar 的核心监听（替代 SeekBarUtils） 音乐
-            seekBar.setOnProgressActionListener(object : SmartSeekBar.OnProgressActionListener {
-                // 进度变化时触发（包括拖动过程和自动更新）
-                override fun onProgressChanged(
-                    seekBar: SmartSeekBar,
-                    progress: Int,
-                    timeMs: Int,
-                    formattedTime: String,
-                    fromUser: Boolean
-                ) {
-
-//                    // 仅处理用户交互导致的进度变化---这个要写 不然没反应
-                    if (fromUser) {
-                        ProgressListenerManager.progressListener?.onProgressUpdate(adapterPosition, progress,formattedTime,tvTotalTime.text.toString())
-                    }
-                }
-
-                override fun onStopTrackingTouch(seekBar: SmartSeekBar) {
-                    super.onStopTrackingTouch(seekBar)
-                    Log.e("onStopTrackingTouch", "音乐onStopTrackingTouch")
-                }
-                //不需要重写 onStartTrackingTouch和onStopTrackingTouch
-            })
+//            seekBar.setOnProgressActionListener(object : SmartSeekBar.OnProgressActionListener {
+//                // 进度变化时触发（包括拖动过程和自动更新）
+//                override fun onProgressChanged(
+//                    seekBar: SmartSeekBar,
+//                    progress: Int,
+//                    timeMs: Int,
+//                    formattedTime: String,
+//                    fromUser: Boolean
+//                ) {
+//
+////                    // 仅处理用户交互导致的进度变化---这个要写 不然没反应
+//                    if (fromUser) {
+//                        ProgressListenerManager.progressListener?.onProgressUpdate(adapterPosition, progress,formattedTime,tvTotalTime.text.toString())
+//                    }
+//                }
+//
+//                override fun onStopTrackingTouch(seekBar: SmartSeekBar) {
+//                    super.onStopTrackingTouch(seekBar)
+//                    Log.e("onStopTrackingTouch", "音乐onStopTrackingTouch")
+//                }
+//                //不需要重写 onStartTrackingTouch和onStopTrackingTouch
+//            })
 
             // 5. 初始化进度和时间显示
             seekBar.updateMediaProgress(0) // 初始进度0
@@ -485,26 +485,26 @@ class MusicRecycleViewAdapter(
             seekBar.setTotalDuration(musicInfo.duration)
             // 3. 初始化缓冲进度
             seekBar.setBufferProgress(0)
-            Log.d("SmartSeekBar","视频setOnProgressActionListener     ${seekBar.hashCode()}")
+            Log.d("SmartSeekBar","视频类型ViewHolder初始化ActionListener 该holder的seekBar对应hashcode 是  ${seekBar.hashCode()}")
 
-            // 4. 设置 SmartSeekBar 的核心监听（替代 SeekBarUtils） 视频
-            seekBar.setOnProgressActionListener(object : SmartSeekBar.OnProgressActionListener {
-                // 进度变化时触发（包括拖动过程和自动更新）
-                override fun onProgressChanged(
-                    seekBar: SmartSeekBar,
-                    progress: Int,
-                    timeMs: Int,
-                    formattedTime: String,
-                    fromUser: Boolean
-                ) {
-//                    // 仅处理用户交互导致的进度变化---这个要写 不然没反应！
-                    if (fromUser) {
-                        ProgressListenerManager.progressListener?.onProgressUpdate(adapterPosition, progress,formattedTime,tvTotalTime.text.toString())
-                    }
-                }
-
-                //不需要重写 onStartTrackingTouch和onStopTrackingTouch
-            })
+            // 4. 设置 SmartSeekBar 的核心监听，视频
+//            seekBar.setOnProgressActionListener(object : SmartSeekBar.OnProgressActionListener {
+//                // 进度变化时触发（包括拖动过程和自动更新）
+//                override fun onProgressChanged(
+//                    seekBar: SmartSeekBar,
+//                    progress: Int,
+//                    timeMs: Int,
+//                    formattedTime: String,
+//                    fromUser: Boolean
+//                ) {
+////                    // 仅处理用户交互导致的进度变化---这个要写 不然没反应！
+//                    if (fromUser) {
+//                        ProgressListenerManager.progressListener?.onProgressUpdate(adapterPosition, progress,formattedTime,tvTotalTime.text.toString())
+//                    }
+//                }
+//
+//                //不需要重写 onStartTrackingTouch和onStopTrackingTouch
+//            })
 
             // 5. 初始化进度和时间显示
             seekBar.updateMediaProgress(0) // 初始进度0
@@ -545,9 +545,10 @@ class MusicRecycleViewAdapter(
 
                 val mediaItem = MediaItem.fromUri(videoUrl)
                 viewModel.sharedPlayer.setMediaItem(mediaItem)
-
+                // 视频第一帧渲染后隐藏缩略图，此处可优化
                 viewModel.sharedPlayer.addListener(object : Player.Listener {
                     override fun onRenderedFirstFrame() {
+                        //视频中途暂停后重新播放, 确保隐藏缩略图的操作只执行一次
                         if (!firstFrameRendered) {
                             thumbnailImageView.visibility = View.GONE  // 第一帧显示后隐藏封面
                             firstFrameRendered = true

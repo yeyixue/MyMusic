@@ -6,13 +6,14 @@
     android:layout_height="wrap_content"
     android:padding="8dp">
 
-    <androidx.cardview.widget.CardView
+    <FrameLayout
         android:id="@+id/card_half"
         android:layout_width="0dp"
         android:layout_height="100dp"
         app:cardCornerRadius="15dp"
         app:cardElevation="4dp"
         app:cardBackgroundColor="@color/purple_200"
+        android:background="@drawable/cardview_style_purple"
         app:layout_constraintWidth_percent="1"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -44,6 +45,6 @@
             android:layout_marginBottom="2dp" />
 
     </LinearLayout>
-</androidx.cardview.widget.CardView>
+    </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

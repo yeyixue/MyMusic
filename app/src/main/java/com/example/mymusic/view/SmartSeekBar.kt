@@ -167,7 +167,7 @@ class SmartSeekBar @JvmOverloads constructor(
 
     // 平滑更新进度,媒体的跳转在viewmodel里面
     private fun smoothSetProgress(progress: Int) {
-        Log.d("SmartSeekBar","smoothSetProgress   progress  $progress")
+//        Log.d("SmartSeekBar","smoothSetProgress   progress  $progress")
 
         progressAnimator?.cancel()
         progressAnimator = ValueAnimator.ofInt(this.progress, progress).apply {

@@ -378,7 +378,7 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
 
     /**
      * 修改startProgressUpdates()，同时支持音频和视频
-     * 代码里需要同步更新currentPosition
+     *
      */
     fun startProgressUpdates() {
         // 关键：停止旧任务，避免重复发送

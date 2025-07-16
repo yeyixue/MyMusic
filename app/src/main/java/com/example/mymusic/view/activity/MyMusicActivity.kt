@@ -2,18 +2,18 @@ package com.example.mymusic.view.activity
 
 import DepthPageTransformer
 import android.view.MotionEvent
+import android.view.ViewConfiguration
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModelProvider
 import androidx.viewpager2.widget.ViewPager2
 import com.example.mymusic.R
 import com.example.mymusic.adapter.MusicAdapter
 import com.example.mymusic.view.fragment.MusicHeadFragment
 import com.example.mymusic.view.fragment.MusicStyleFragment
-import com.example.mymusic.viewmodel.MyMusicViewModel
+import com.example.mymusic.viewmodel.fragment.MyMusicViewModel
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
+
 
 class MyMusicActivity : BaseMusicActivity() {
     private lateinit var viewPager: ViewPager2
@@ -21,9 +21,21 @@ class MyMusicActivity : BaseMusicActivity() {
     private lateinit var mMusicStyleFragment: MusicStyleFragment
     private lateinit var tabLayout: TabLayout
     private lateinit var mMyMusicViewModel: MyMusicViewModel
-
     var currentMusicId:Int=-1
     val isPlaying: Boolean=false
+
+    // 定义变量保存注册的回调实例
+    // 用于灵敏度计算的变量
+    private var initialX: Float = 0f
+    private var initialY: Float = 0f
+    private val scaledTouchSlop by lazy {
+        ViewConfiguration.get(this).scaledPagingTouchSlop // 系统默认滑动阈值
+    }
+    // 灵敏度系数（值越小越灵敏，建议 0.5f-2.0f）
+    private val sensitivityFactor = 0.7f // 调整这个值控制灵敏度
+
+
+
 
     override fun getLayoutResId(): Int =R.layout.activity_my_music
 
@@ -52,6 +64,7 @@ class MyMusicActivity : BaseMusicActivity() {
         val adapter= MusicAdapter(this,fragmentList)
         viewPager.adapter=adapter
 
+
         // 设置tablayout
         // 正确关联 TabLayout 和 ViewPager2（使用 TabLayoutMediator）
         TabLayoutMediator(tabLayout, viewPager) { tab, position ->
@@ -74,46 +87,48 @@ class MyMusicActivity : BaseMusicActivity() {
         //这会导致左右两侧的 Fragment 都被预加载并初始化（包括设置点击监听）。
 //        viewPager.offscreenPageLimit=1
 
-        viewPager.registerOnPageChangeCallback(object: ViewPager2.OnPageChangeCallback(){
-            // 记录滑动方向
-            private var isSwipingLeft = false
-            private var isSwipingRight = false
-            override fun onPageScrollStateChanged(state: Int) {
-                super.onPageScrollStateChanged(state)
-                if (state == ViewPager2.SCROLL_STATE_DRAGGING) {
-//                    isSwipingLeft = viewPager.currentItem < position  // 从右向左滑
-//                    isSwipingRight = viewPager.currentItem > position  // 从左向右滑
-                }
-            }
 
-            override fun onPageSelected(position: Int) {
-                super.onPageSelected(position)
-            }
 
-            override fun onPageScrolled(
-                position: Int,
-                positionOffset: Float,
-                positionOffsetPixels: Int
-            ) {
-                super.onPageScrolled(position, positionOffset, positionOffsetPixels)
+    }
 
-                // 完全显示第一页且尝试向右滑动
-                if (position == 0 && positionOffset == 0f && isSwipingRight) {
-                    viewPager.isUserInputEnabled = false  // 禁止滑动
+
+    // 重写触摸事件，调整滑动灵敏度
+    override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
+        ev?.let { event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    // 记录初始触摸位置
+                    initialX = event.x
+                    initialY = event.y
                 }
-                // 完全显示最后一页且尝试向左滑动
-                else if (position == (viewPager.adapter?.itemCount ?: 0) - 1 &&
-                    positionOffset == 0f && isSwipingLeft) {
-                    viewPager.isUserInputEnabled = false  // 禁止滑动
+                MotionEvent.ACTION_MOVE -> {
+                    val dx = Math.abs(event.x - initialX) // 水平滑动距离
+                    val dy = Math.abs(event.y - initialY) // 垂直滑动距离
+
+                    // 调整灵敏度：缩小触发滑动的阈值（默认阈值 * 灵敏度系数）
+                    val adjustedTouchSlop = (scaledTouchSlop * sensitivityFactor).toInt()
+
+                    // 水平滑动且超过调整后的阈值，才允许 ViewPager2 响应滑动
+                    if (dx > adjustedTouchSlop && dx > dy) {
+                        viewPager.isUserInputEnabled = true
+                    } else {
+                        // 未达到滑动阈值或垂直滑动，不响应（提高灵敏度时更易触发）
+                        viewPager.isUserInputEnabled = false
+                    }
                 }
-                // 其他情况允许滑动
-                else {
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    // 触摸结束后恢复响应
                     viewPager.isUserInputEnabled = true
                 }
             }
-
-
-        })
+        }
+        return super.dispatchTouchEvent(ev)
     }
+
+
+    override fun onDestroy() {
+        super.onDestroy()
+    }
+
 
 }

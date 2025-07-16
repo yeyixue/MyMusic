@@ -1,15 +1,6 @@
-package com.example.mymusic.viewmodel
+package com.example.mymusic.viewmodel.fragment
 
-import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.mymusic.repo.entity.MusicInfo
-import com.example.mymusic.repo.remote.ApiService
-import com.example.mymusic.repo.remote.RetrofitConnection
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
-import io.reactivex.rxjava3.disposables.CompositeDisposable
-import io.reactivex.rxjava3.schedulers.Schedulers
 
 class MyMusicViewModel : ViewModel() {
 
