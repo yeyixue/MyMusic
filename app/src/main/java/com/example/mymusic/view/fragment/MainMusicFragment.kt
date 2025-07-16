@@ -122,11 +122,11 @@ class MainMusicFragment : BaseMusicFragment() {
 
 
     private fun setupRecyclerView() {
-        // 使用已初始化的mRecyclerView（避免重复findViewById）
+        // 使用已初始化的mRecyclerView
         val layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
         mRecyclerView.layoutManager = layoutManager
 
-        // 初始化适配器（初始数据为空列表）
+        // 初始化适配器
 //        mMusicRecycleViewAdapter = MusicRecycleViewAdapter(musicList)
         mMusicRecycleViewAdapter = MusicRecycleViewAdapter(mMainMusicViewModel, musicList)
 
@@ -146,24 +146,9 @@ class MainMusicFragment : BaseMusicFragment() {
                 // 用户拖动进度条时，更新ViewModel
                 val musicInfo = musicList[position]
                 mMainMusicViewModel.setCurrentMusicId(musicInfo.songId.toString())
-                // 滑动开始时暂停播放
-//                if (musicInfo.isVideo) {
-//                    mMainMusicViewModel.pauseVideo()
-//                } else {
-//                    mMainMusicViewModel.pauseMusic()
-//                }
+
                 // 无论播放/暂停，都强制跳转进度
                 mMainMusicViewModel.seekToPercent(progress)
-                Log.d("MyMusic","无论播放/暂停，都强制跳转进度mMainMusicViewModel.seekToPercent(progress)")
-
-                // 手动更新进度条UI（避免被ViewModel的旧进度覆盖）
-//                mMusicRecycleViewAdapter.updateItemProgress(position, progress, currentTime)
-//                if (musicInfo.isVideo) {
-//                    mMainMusicViewModel.resumeVideo()
-//                } else {
-//                    mMainMusicViewModel.resumeMusic()
-//                }
-
             }
 
         })
@@ -186,7 +171,7 @@ class MainMusicFragment : BaseMusicFragment() {
 
                     // 检查是否真的切换到了新页面
                     if (newCenterPosition != currentCenterPosition && newCenterPosition in musicList.indices) {
-                        val viewHolder = mRecyclerView.findViewHolderForAdapterPosition(currentCenterPosition)
+//                        val viewHolder = mRecyclerView.findViewHolderForAdapterPosition(currentCenterPosition)
 
                         val newMusic = musicList[newCenterPosition]
                         Log.d("PositionUpdate", "滚动完成，旧位置: $currentCenterPosition → 新位置: $newCenterPosition")
@@ -259,7 +244,7 @@ class MainMusicFragment : BaseMusicFragment() {
             }
             // 计算进度百分比（0-100）
             val progressPercent = ((currentPosition * 100) / duration).toInt().coerceIn(0, 100)
-            // 格式化当前时间（复用ViewModel的格式化方法）
+            // 格式化当前时间
             val formattedTime = mMainMusicViewModel.formatTime(currentPosition.toInt())
             // 获取当前中心位置（音频和视频共用同一个位置标记）
             val currentPlayingPosition = mMusicRecycleViewAdapter.currentCenterPosition

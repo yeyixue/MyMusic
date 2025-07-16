@@ -8,12 +8,12 @@ import com.example.mymusic.R
 import com.example.mymusic.adapter.MyMusicAdapter
 import com.example.mymusic.view.mymusicfragment.DownLoadFragment
 import com.example.mymusic.view.mymusicfragment.PlayListFragment
-import com.example.mymusic.viewmodel.fragment.MyMusicFragmentViewModel
+import com.example.mymusic.viewmodel.fragment.MyMusicViewModel
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 
 class MyMusicFragment : BaseMusicFragment() {
-    private lateinit var mMyMusicFragmentViewModel: MyMusicFragmentViewModel
+    private lateinit var mMyMusicFragmentViewModel: MyMusicViewModel
     private lateinit var mDownLoadFragment:DownLoadFragment
     private lateinit var mPlayListFragment:PlayListFragment
     private lateinit var viewPager: ViewPager2
@@ -25,7 +25,7 @@ class MyMusicFragment : BaseMusicFragment() {
 
     override fun initView() {
         // 正确初始化 ViewModel
-        mMyMusicFragmentViewModel = ViewModelProvider(this).get(MyMusicFragmentViewModel::class.java)
+        mMyMusicFragmentViewModel = ViewModelProvider(this).get(MyMusicViewModel::class.java)
         mDownLoadFragment=DownLoadFragment()
         mPlayListFragment=PlayListFragment()
         viewPager=rootView.findViewById(R.id.myViewPager)
