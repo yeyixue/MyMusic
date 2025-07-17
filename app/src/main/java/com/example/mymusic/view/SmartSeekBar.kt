@@ -68,7 +68,9 @@ class SmartSeekBar @JvmOverloads constructor(
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         Log.d("SmartSeekBar","setOnProgressActionListener")
-
+        // 重置进度和缓冲进度
+        progress = 0 // 当前进度重置为0
+        secondaryProgress = 0 // 缓冲进度重置为0
         setOnProgressActionListener(object : SmartSeekBar.OnProgressActionListener {
             // 进度变化时触发（包括拖动过程和自动更新）
             override fun onProgressChanged(

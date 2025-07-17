@@ -610,21 +610,33 @@ class MusicRecycleViewAdapter(
         }
     }
 
-    override fun onViewRecycled(holder: RecyclerView.ViewHolder) {
+//    override fun onViewRecycled(holder: RecyclerView.ViewHolder) {
+//        if (holder is VideoViewHolder) {
+//            holder.playerView.player = null // 强制解绑
+////            holder.releasePlayer()
+//            holder.pauseVideo()
+//            Log.d("ViewRecycled", "ViewHolder回收，解绑PlayerView")
+//            holder.firstFrameRendered = false // 重置第一帧渲染状态
+//            // 隐藏playerView，显示封面图（避免复用时显示旧画面）
+//            holder.playerView.visibility = View.GONE
+//            holder.thumbnailImageView.visibility = View.VISIBLE
+//        }
+//        super.onViewRecycled(holder)
+//    }
+
+    // 这样 能够保证预加载别的视频封面!
+    override fun onViewDetachedFromWindow(holder: RecyclerView.ViewHolder) {
+        super.onViewDetachedFromWindow(holder)
         if (holder is VideoViewHolder) {
             holder.playerView.player = null // 强制解绑
-//            holder.releasePlayer()
-            holder.pauseVideo()
+//            holder.pauseVideo()
             Log.d("ViewRecycled", "ViewHolder回收，解绑PlayerView")
             holder.firstFrameRendered = false // 重置第一帧渲染状态
             // 隐藏playerView，显示封面图（避免复用时显示旧画面）
             holder.playerView.visibility = View.GONE
             holder.thumbnailImageView.visibility = View.VISIBLE
         }
-        super.onViewRecycled(holder)
     }
-
-
 
 
     // DiffUtil回调（补充评论数、分享数的差异检查）

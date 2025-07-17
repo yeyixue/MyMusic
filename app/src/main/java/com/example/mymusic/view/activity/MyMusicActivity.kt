@@ -21,8 +21,9 @@ class MyMusicActivity : BaseMusicActivity() {
     private lateinit var mMusicStyleFragment: MusicStyleFragment
     private lateinit var tabLayout: TabLayout
     private lateinit var mMyMusicViewModel: MyMusicViewModel
-    var currentMusicId:Int=-1
-    val isPlaying: Boolean=false
+    private var isPlaybackPageVisible = false   // MainMusicFragment 是否可见
+    private var allowScroll = false   // 是否允许滑动，
+
 
     // 定义变量保存注册的回调实例
     // 用于灵敏度计算的变量
@@ -73,11 +74,6 @@ class MyMusicActivity : BaseMusicActivity() {
                 1 -> "听歌模式"
                 else ->null
             }
-//            tab.icon = when(position) {
-//                0 -> resources.getDrawable(R.drawable.ic_launcher_background, theme)
-//                1 -> resources.getDrawable(R.drawable.flower, theme)
-//                else -> null
-//            }
         }.attach()
 
 //        // 设置显示的页面
@@ -87,42 +83,69 @@ class MyMusicActivity : BaseMusicActivity() {
         //这会导致左右两侧的 Fragment 都被预加载并初始化（包括设置点击监听）。
 //        viewPager.offscreenPageLimit=1
 
+        viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                updateScrollPermission()
+            }
 
+            override fun onPageScrolled(
+                position: Int,
+                positionOffset: Float,
+                positionOffsetPixels: Int
+            ) {
+                super.onPageScrolled(position, positionOffset, positionOffsetPixels)
+                updateScrollPermission()
+
+            }
+        })
 
     }
 
 
     // 重写触摸事件，调整滑动灵敏度
     override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
-        ev?.let { event ->
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    // 记录初始触摸位置
-                    initialX = event.x
-                    initialY = event.y
-                }
-                MotionEvent.ACTION_MOVE -> {
-                    val dx = Math.abs(event.x - initialX) // 水平滑动距离
-                    val dy = Math.abs(event.y - initialY) // 垂直滑动距离
-
-                    // 调整灵敏度：缩小触发滑动的阈值（默认阈值 * 灵敏度系数）
-                    val adjustedTouchSlop = (scaledTouchSlop * sensitivityFactor).toInt()
-
-                    // 水平滑动且超过调整后的阈值，才允许 ViewPager2 响应滑动
-                    if (dx > adjustedTouchSlop && dx > dy) {
-                        viewPager.isUserInputEnabled = true
-                    } else {
-                        // 未达到滑动阈值或垂直滑动，不响应（提高灵敏度时更易触发）
-                        viewPager.isUserInputEnabled = false
+        if(allowScroll){
+            ev?.let { event ->
+                when (event.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        // 记录初始触摸位置
+                        initialX = event.x
+                        initialY = event.y
                     }
-                }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    // 触摸结束后恢复响应
-                    viewPager.isUserInputEnabled = true
+                    MotionEvent.ACTION_MOVE -> {
+                        val dx = Math.abs(event.x - initialX) // 水平滑动距离
+                        val dy = Math.abs(event.y - initialY) // 垂直滑动距离
+
+                        // 调整灵敏度：缩小触发滑动的阈值（默认阈值 * 灵敏度系数）
+                        val adjustedTouchSlop = (scaledTouchSlop * sensitivityFactor).toInt()
+
+                        // 水平滑动且超过调整后的阈值，才允许 ViewPager2 响应滑动
+                        if (dx > adjustedTouchSlop && dx > dy) {
+                            viewPager.isUserInputEnabled = true
+                        } else {
+                            // 未达到滑动阈值或垂直滑动，不响应（提高灵敏度时更易触发）
+                            viewPager.isUserInputEnabled = false
+                        }
+                    }
+                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                        // 触摸结束后恢复响应
+                        viewPager.isUserInputEnabled = true
+                        isPlaybackPageVisible=true
+                    }
                 }
             }
         }
         return super.dispatchTouchEvent(ev)
+    }
+
+    fun onPlaybackPageVisible(visible: Boolean) {
+        isPlaybackPageVisible = visible
+        // 这个执行完又重新执行 touchEvent,所以在up上设置判断
+        updateScrollPermission()
+    }
+
+    private fun updateScrollPermission() {
+        viewPager.isUserInputEnabled = isPlaybackPageVisible
     }
 
 

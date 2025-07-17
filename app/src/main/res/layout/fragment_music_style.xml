@@ -21,106 +21,56 @@
         android:layout_marginBottom="15dp"
         android:textSize="22sp"/>
 
-
-    <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/btDefault"
+    <RadioGroup
         android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:layout_marginHorizontal="20dp"
-        android:background="@drawable/button_style_white"
-        android:text="默认模式"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:textColor="@color/black"
-        />
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
-    <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/btFamiliarMode"
-        android:layout_marginTop="20dp"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:layout_marginHorizontal="20dp"
-        android:background="@drawable/button_style_black"
-        android:text="熟悉模式"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:textColor="@color/white"
-        />
+        <RadioButton
+            android:id="@+id/btDefault"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:button="@null"
+            android:layout_marginHorizontal="20dp"
+            android:background="@drawable/button_style_selector"
+            android:textColor="@color/radio_text_selector"
+            android:text="熟悉模式"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            />
+        <RadioButton
+            android:id="@+id/btFamiliarMode"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:button="@null"
+            android:layout_marginHorizontal="20dp"
+            android:layout_marginVertical="20dp"
+            android:background="@drawable/button_style_selector"
+            android:textColor="@color/radio_text_selector"
+            android:text="默认模式"
+            android:textSize="20sp"
+            android:gravity="center"
 
-    <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/btFresh"
-        android:layout_marginTop="20dp"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:layout_marginHorizontal="20dp"
-        android:background="@drawable/button_style_black"
-        android:text="新鲜模式"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:textColor="@color/white"
-        />
-<!--    <androidx.cardview.widget.CardView-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="40dp"-->
-<!--        android:layout_marginHorizontal="20dp"-->
-<!--        app:cardCornerRadius="20dp"-->
-<!--        -->
-<!--        android:background="@color/white">-->
+            android:textStyle="bold"
+            />
+        <RadioButton
+            android:id="@+id/btFresh"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:button="@null"
+            android:layout_marginHorizontal="20dp"
+            android:background="@drawable/button_style_selector"
+            android:textColor="@color/radio_text_selector"
+            android:text="新鲜模式"
+            android:textSize="20sp"
+            android:gravity="center"
 
-<!--        <TextView-->
-<!--            android:id="@+id/tvFamiliarMode"-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="默认模式"-->
-<!--            android:textSize="20sp"-->
-<!--            android:textStyle="bold"-->
-<!--            android:textColor="@color/black"-->
-<!--            android:layout_gravity="center"/>-->
-<!--    </androidx.cardview.widget.CardView>-->
+            android:textStyle="bold"
+            />
 
+    </RadioGroup>
 
-<!--    <androidx.cardview.widget.CardView-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="40dp"-->
-<!--        android:layout_marginHorizontal="20dp"-->
-<!--        android:layout_marginTop="20dp"-->
-<!--        app:cardCornerRadius="20dp"-->
-<!--        app:cardBackgroundColor="@color/musicstyle">-->
-<!--        <TextView-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="熟悉模式"-->
-<!--            android:textSize="20sp"-->
-<!--            android:textStyle="bold"-->
-<!--            android:textColor="@color/white"-->
-<!--            android:layout_gravity="center"/>-->
-<!--    </androidx.cardview.widget.CardView>-->
-<!--    <androidx.cardview.widget.CardView-->
-<!--        android:id="@+id/imageViewMusicPicture"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="40dp"-->
-<!--        android:layout_marginHorizontal="20dp"-->
-<!--        android:layout_marginTop="20dp"-->
-<!--        app:cardCornerRadius="20dp"-->
-<!--        app:cardBackgroundColor="@color/musicstyle">-->
-
-<!--        <TextView-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="新鲜模式"-->
-<!--            android:textSize="20sp"-->
-<!--            android:textStyle="bold"-->
-<!--            android:textColor="@color/white"-->
-<!--            android:layout_gravity="center"/>-->
-<!--    </androidx.cardview.widget.CardView>-->
-
-<!--    <androidx.cardview.widget.CardView-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:layout_marginHorizontal="20dp"-->
-<!--        android:layout_marginTop="20dp"-->
-<!--        app:cardCornerRadius="0dp"-->
-<!--        app:cardBackgroundColor="@color/musicstyle">-->
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycleViewMusicStyle"

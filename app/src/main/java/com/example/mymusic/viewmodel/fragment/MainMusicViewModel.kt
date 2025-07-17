@@ -125,6 +125,7 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
                 // 从0开始播放
                 mediaPlayer.start()
                 setPlayingState(true)
+                setCurrentMusicId(music.songId.toString())
 
                 // 启动统一进度更新 --start之后启动
                 startProgressUpdates()
@@ -235,7 +236,8 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
 
         }
     }
-
+    private val _playNextEvent = MutableLiveData<Int?>()
+    val playNextEvent: LiveData<Int?> = _playNextEvent
     // 播放下一首（完善逻辑）
     private fun playNextSong() {
         val currentList = _playlist.value ?: return
@@ -246,14 +248,13 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
         if (currentIndex == -1) return // 未找到当前歌曲，直接返回
 
         // 2. 计算下一首位置（循环播放：最后一首的下一首是第一首）
-        val nextIndex = (currentIndex + 1) % currentList.size
+        val nextIndex = (currentIndex.toInt() + 1) % currentList.size
         val nextMusic = currentList[nextIndex]
 
         // 3. 更新当前播放ID并播放下一首
         setCurrentMusicId(nextMusic.songId.toString())
-        playMusic(nextMusic)
 
-        // 4. 通知Fragment滚动到下一首的位置（触发自动翻页）
+        // 4. 通知Fragment滚动到下一首的位置（触发自动翻页）--自动播放
         _scrollToPosition.value = nextIndex
     }
     // 清除滚动指令（避免重复触发）
@@ -397,7 +398,7 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
                     } else {
                         Log.d("ProgressUpdate", "视频时长无效: $duration，跳过更新")
                     }
-                } else if (!isPlayingVideo ) {
+                } else if (!isPlayingVideo) {
                     // 音频进度
                     val currentPos = mediaPlayer.currentPosition.toLong()
                     val duration = mediaPlayer.duration.toLong()
