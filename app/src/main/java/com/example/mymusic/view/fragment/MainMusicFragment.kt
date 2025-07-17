@@ -176,14 +176,14 @@ class MainMusicFragment : BaseMusicFragment() {
                         val newMusic = musicList[newCenterPosition]
                         Log.d("PositionUpdate", "滚动完成，旧位置: $currentCenterPosition → 新位置: $newCenterPosition")
                         // 暂停当前播放（无论是音乐还是视频）
-                        if (currentCenterPosition != -1) {
-                            val currentMusic = musicList[currentCenterPosition]
-                            if (currentMusic.isVideo) {
-                                mMainMusicViewModel.pauseVideo()
-                            } else {
-                                mMainMusicViewModel.pauseMusic()
-                            }
-                        }
+//                        if (currentCenterPosition != -1) {
+//                            val currentMusic = musicList[currentCenterPosition]
+//                            if (currentMusic.isVideo) {
+//                                mMainMusicViewModel.pauseVideo()
+//                            } else {
+//                                mMainMusicViewModel.pauseMusic()
+//                            }
+//                        }
                         // 更新当前中心位置
                         currentCenterPosition = newCenterPosition
                         if(newMusic.isVideo==false){

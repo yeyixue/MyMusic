@@ -188,7 +188,7 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
             // 获取当前缓冲百分比
             val bufferedPercent = _bufferProgress.value ?: 0
             Log.w(TAG, "缓冲区域bufferedPercent: $bufferedPercent%   percent 是$percent")
-            // 只允许跳转到已缓冲的区域
+            // 只允许跳转到已缓冲的区域，可能限制暂停音乐没法调整
             if (percent <= bufferedPercent) {
                 val duration = mediaPlayer.duration
                 val targetPosition = (percent * duration / 100f).toLong()
@@ -397,13 +397,13 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
                     } else {
                         Log.d("ProgressUpdate", "视频时长无效: $duration，跳过更新")
                     }
-                } else if (!isPlayingVideo && mediaPlayer.isPlaying) {
+                } else if (!isPlayingVideo ) {
                     // 音频进度
                     val currentPos = mediaPlayer.currentPosition.toLong()
                     val duration = mediaPlayer.duration.toLong()
                     progressLiveData.postValue(Pair(currentPos, duration))
                 }
-                // 仅在播放状态下继续更新
+                // 仅在播放状态下继续更新--删除&& mediaPlayer.isPlaying 让暂停状态也能更新进度
                 progressHandler.postDelayed(this, 1000)
             }
         }

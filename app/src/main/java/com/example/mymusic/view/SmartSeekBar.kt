@@ -317,6 +317,17 @@ class SmartSeekBar @JvmOverloads constructor(
         progressAnimator?.cancel()
         progressAnimator = null
         actionListener = null
+
+        // 重置进度和缓冲进度
+        progress = 0 // 当前进度重置为0
+        secondaryProgress = 0 // 缓冲进度重置为0
+
+        // 重置状态变量
+        isDragging = false
+        isUserInteracting = false
+        isInterceptDisabled = false
+
+
     }
 
     override fun performClick(): Boolean {
