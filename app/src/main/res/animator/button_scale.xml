@@ -1,0 +1,33 @@
+
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 按下状态：缩小 -->
+    <item android:state_pressed="true">
+        <set>
+            <objectAnimator
+                android:propertyName="scaleX"
+                android:valueFrom="1.0"
+                android:valueTo="0.9"
+                android:duration="200"/>
+            <objectAnimator
+                android:propertyName="scaleY"
+                android:valueFrom="1.0"
+                android:valueTo="0.9"
+                android:duration="200"/>
+        </set>
+    </item>
+    <!-- 抬起状态：恢复 -->
+    <item android:state_pressed="false">
+        <set>
+            <objectAnimator
+                android:propertyName="scaleX"
+                android:valueFrom="0.9"
+                android:valueTo="1.0"
+                android:duration="200"/>
+            <objectAnimator
+                android:propertyName="scaleY"
+                android:valueFrom="0.9"
+                android:valueTo="1.0"
+                android:duration="200"/>
+        </set>
+    </item>
+</selector>

@@ -97,6 +97,7 @@ class PlayListFragment : BaseMusicFragment() {
             PlayListInfo(R.mipmap.tiktok, "抖音收藏的音乐", true,128),
             PlayListInfo(R.mipmap.tiktok, "歌单1", true,82),
             PlayListInfo(R.mipmap.tiktok, "其他歌单", true,81),
+            PlayListInfo(R.mipmap.tiktok, "其他歌单2", true,81),
 
         )
         // 添加数据并刷新适配器

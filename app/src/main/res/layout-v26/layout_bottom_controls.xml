@@ -135,6 +135,9 @@
             android:layout_height="55dp"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintTop_toTopOf="parent"
+            android:stateListAnimator="@animator/button_scale"
+            android:clickable="true"
+            android:focusable="true"
             app:lottie_autoPlay="false"
             app:lottie_fileName="heart_lottie_no_background.json"
             app:lottie_loop="false" />
@@ -159,6 +162,10 @@
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:layout_marginLeft="25dp"
+            android:focusable="true"
+            android:stateListAnimator="@animator/button_scale"
+            android:clickable="true"
+
             android:src="@mipmap/review"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toRightOf="@id/lottie_heart"
@@ -183,7 +190,10 @@
             android:layout_width="35dp"
             android:layout_height="35dp"
             android:layout_marginLeft="25dp"
+            android:focusable="true"
             android:src="@mipmap/share"
+            android:stateListAnimator="@animator/button_scale"
+            android:clickable="true"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toRightOf="@id/review"
             app:layout_constraintTop_toTopOf="parent" />
@@ -214,11 +224,17 @@
                 android:layout_width="20dp"
                 android:layout_height="20dp"
                 android:layout_marginRight="20dp"
+                android:focusable="true"
+                android:stateListAnimator="@animator/button_scale"
+                android:clickable="true"
                 android:src="@mipmap/dislike" />
 
             <ImageView
                 android:layout_width="20dp"
                 android:layout_height="20dp"
+                android:focusable="true"
+                android:stateListAnimator="@animator/button_scale"
+                android:clickable="true"
                 android:src="@mipmap/more" />
         </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>

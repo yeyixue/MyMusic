@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true"
+        android:drawable="@drawable/button_style_white"
+          />
     <item android:state_checked="true"
         android:drawable="@drawable/button_style_white"/> <!-- 选中时的背景色 -->
     <item android:drawable="@drawable/button_style_black"/> <!-- 默认背景色 -->
