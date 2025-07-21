@@ -98,6 +98,8 @@ class PlayListFragment : BaseMusicFragment() {
             PlayListInfo(R.mipmap.tiktok, "歌单1", true,82),
             PlayListInfo(R.mipmap.tiktok, "其他歌单", true,81),
             PlayListInfo(R.mipmap.tiktok, "其他歌单2", true,81),
+            PlayListInfo(R.mipmap.tiktok, "其他歌单3", true,81),
+            PlayListInfo(R.mipmap.tiktok, "其他歌单4", true,81),
 
         )
         // 添加数据并刷新适配器

@@ -35,6 +35,7 @@
             android:background="@drawable/button_style_selector"
             android:textColor="@color/radio_text_selector"
             android:stateListAnimator="@animator/button_scale"
+            android:checked="true"
             android:text="熟悉模式"
             android:textSize="20sp"
             android:textStyle="bold"
