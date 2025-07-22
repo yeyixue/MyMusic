@@ -1,19 +1,23 @@
 package com.example.mymusic.view.activity
 
 import DepthPageTransformer
+import android.app.Activity
+import android.content.Intent
 import android.view.MotionEvent
+import android.view.View
 import android.view.ViewConfiguration
+import android.view.WindowManager
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.viewpager2.widget.ViewPager2
 import com.example.mymusic.R
 import com.example.mymusic.adapter.MusicAdapter
+import com.example.mymusic.view.fragment.MainMusicFragment
 import com.example.mymusic.view.fragment.MusicHeadFragment
 import com.example.mymusic.view.fragment.MusicStyleFragment
 import com.example.mymusic.viewmodel.fragment.MyMusicViewModel
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
-
 
 class MyMusicActivity : BaseMusicActivity() {
     private lateinit var viewPager: ViewPager2
@@ -35,12 +39,17 @@ class MyMusicActivity : BaseMusicActivity() {
     // 灵敏度系数（值越小越灵敏，建议 0.5f-2.0f）
     private val sensitivityFactor = 0.7f // 调整这个值控制灵敏度
 
-
+    override fun onResume() {
+        super.onResume()
+    }
 
 
     override fun getLayoutResId(): Int =R.layout.activity_my_music
 
     override fun initViews() {
+        // 隐藏状态栏（关键代码）
+        hideStatusBar()
+
         mMyMusicViewModel= ViewModelProvider(this).get(MyMusicViewModel::class.java)
         // 初始化 Fragments
         mMusicHeadFragment = MusicHeadFragment()
@@ -49,7 +58,18 @@ class MyMusicActivity : BaseMusicActivity() {
         tabLayout = findViewById(R.id.tabs)
 
     }
+    // 隐藏状态栏的核心方法
+    private fun hideStatusBar() {
+        // 方法 1：通过 Window 标志隐藏（适用于所有版本）
+        window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        // 移除状态栏显示的标志（确保不冲突）
+        window.clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN)
 
+        // 方法 2：通过 View 系统 UI 可见性隐藏（可选，增强效果）
+        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN or
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+    }
     override fun setListener() {
     }
 

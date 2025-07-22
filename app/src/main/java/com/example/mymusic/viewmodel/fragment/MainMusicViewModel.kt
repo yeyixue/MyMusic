@@ -2,8 +2,10 @@ package com.example.mymusic.viewmodel.fragment
 
 import android.app.Application
 import android.content.Context
+import android.graphics.Bitmap
 import android.media.AudioManager
 import android.media.MediaPlayer
+import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -12,11 +14,13 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mymusic.BuildConfig
+import com.example.mymusic.R
 import com.example.mymusic.adapter.MusicRecycleViewAdapter
 import com.example.mymusic.repo.entity.MusicInfo
 import com.example.mymusic.repo.remote.ApiService
@@ -48,8 +52,8 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
     // 播放器核心
 //    lateinit var mediaPlayer: ExoPlayer
 
-    internal val mediaPlayer = MediaPlayer()
-    private var isMediaPrepared = false // 标记播放器是否准备完成
+//    internal val mediaPlayer = MediaPlayer()
+//    private var isMediaPrepared = false // 标记播放器是否准备完成
     // 缓冲进度 LiveData
     private val _bufferProgress = MutableLiveData<Int>(0)
     val bufferProgress: LiveData<Int> = _bufferProgress
@@ -61,32 +65,10 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
     private val _scrollToPosition = MutableLiveData<Int?>()
     val scrollToPosition: LiveData<Int?> = _scrollToPosition
 
-
+    var coverResId: Int? = null // 音乐封面资源ID（mipmap/img*）
+    var coverBitmap: Bitmap? = null // 视频封面（第一帧截图）
     // 初始化播放器时，确保播放完成监听正确绑定
-    init {
 
-        mediaPlayer.setOnSeekCompleteListener {
-//            Log.d("Music"," mediaPlayer.setOnSeekCompleteListener 更新缓冲进度是${mediaPlayer.currentPosition}")
-
-        }
-
-        // 设置缓冲监听
-        mediaPlayer.setOnBufferingUpdateListener { _, percent ->
-            Log.d("Music"," mediaPlayer.setOnBufferingUpdateListener 更新缓冲进度是$percent")
-            _bufferProgress.postValue(percent)
-        }
-        mediaPlayer.setOnCompletionListener {
-            Log.d("PlayCompletion", "音乐正常播放完成，切到下一首")
-            playNextSong()
-        }
-        // 新增错误监听
-        mediaPlayer.setOnErrorListener { mp, what, extra ->
-            Log.e("PlayError", "音乐播放错误: what=$what, extra=$extra")
-            true // 消费错误，不触发完成监听
-        }
-
-
-    }
 
     // 更新当前音乐ID的方法
     fun setCurrentMusicId(id: String?) {
@@ -100,106 +82,90 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
 
 
     // 播放指定歌曲
+//    fun playMusic(music: MusicInfo) {
+//        try {
+//            // 关键：无论当前状态如何，强制停止并重置播放器（确保新歌曲从0开始）
+//            if (mediaPlayer.isPlaying) {
+//                mediaPlayer.stop()
+//            }
+//
+//            mediaPlayer.reset()
+//            isMediaPrepared = false // 重置准备状态
+//
+//            // 设置新歌曲数据源
+//            val audioUrl = getAudioUrlBySongId(music.songId)
+//            mediaPlayer.setDataSource(audioUrl)
+//            // setDataSource之后再prepareAsync
+//            mediaPlayer.prepareAsync()
+//
+//            // 1. 准备完成监听器
+//            mediaPlayer.setOnPreparedListener {
+//                isMediaPrepared = true
+//                // 标记当前播放的是音乐
+//                isPlayingVideo = false
+//
+//                // 从0开始播放
+//                mediaPlayer.start()
+//                setPlayingState(true)
+//                setCurrentMusicId(music.songId.toString())
+//
+//                // 启动统一进度更新 --start之后启动
+//                startProgressUpdates()
+//            }
+//            // 2. 缓冲进度监听器
+//            mediaPlayer.setOnBufferingUpdateListener { _, percent ->
+//                Log.d("Music"," mediaPlayer.setOnBufferingUpdateListener 更新缓冲进度是$percent")
+//                _bufferProgress.postValue(percent)
+//            }
+//
+//            // 3. 播放完成监听器（确保下一首能正常切换）
+//            mediaPlayer.setOnCompletionListener {
+//                Log.d("PlayCompletion", "音乐正常播放完成，切到下一首")
+//                playNextSong()
+//            }
+//
+//            // 4. 错误监听器
+//            mediaPlayer.setOnErrorListener { mp, what, extra ->
+//                Log.e("PlayError", "音乐播放错误: what=$what, extra=$extra")
+//                true // 消费错误
+//            }
+//
+//        } catch (e: Exception) {
+//            Log.e(TAG, "播放失败: ${e.message}", e)
+//            setPlayingState(false)
+//        }
+//    }
+
+    // ViewModel 中播放音乐的方法（示例）
     fun playMusic(music: MusicInfo) {
-        try {
-            // 关键：无论当前状态如何，强制停止并重置播放器（确保新歌曲从0开始）
-            if (mediaPlayer.isPlaying) {
-                mediaPlayer.stop()
-            }
-
-            mediaPlayer.reset()
-            isMediaPrepared = false // 重置准备状态
-
-            // 设置新歌曲数据源
-            val audioUrl = getAudioUrlBySongId(music.songId)
-            mediaPlayer.setDataSource(audioUrl)
-            // setDataSource之后再prepareAsync
-            mediaPlayer.prepareAsync()
-
-            // 1. 准备完成监听器
-            mediaPlayer.setOnPreparedListener {
-                isMediaPrepared = true
-                // 标记当前播放的是音乐
-                isPlayingVideo = false
-
-                // 从0开始播放
-                mediaPlayer.start()
-                setPlayingState(true)
-                setCurrentMusicId(music.songId.toString())
-
-                // 启动统一进度更新 --start之后启动
-                startProgressUpdates()
-            }
-            // 2. 缓冲进度监听器
-            mediaPlayer.setOnBufferingUpdateListener { _, percent ->
-                Log.d("Music"," mediaPlayer.setOnBufferingUpdateListener 更新缓冲进度是$percent")
-                _bufferProgress.postValue(percent)
-            }
-
-            // 3. 播放完成监听器（确保下一首能正常切换）
-            mediaPlayer.setOnCompletionListener {
-                Log.d("PlayCompletion", "音乐正常播放完成，切到下一首")
-                playNextSong()
-            }
-
-            // 4. 错误监听器
-            mediaPlayer.setOnErrorListener { mp, what, extra ->
-                Log.e("PlayError", "音乐播放错误: what=$what, extra=$extra")
-                true // 消费错误
-            }
-
-        } catch (e: Exception) {
-            Log.e(TAG, "播放失败: ${e.message}", e)
-            setPlayingState(false)
-        }
+        val audioUrl = getAudioUrlBySongId(music.songId)
+        val mediaItem = MediaItem.Builder()
+            .setUri(audioUrl)
+            .setMediaMetadata(
+                MediaMetadata.Builder()
+                    .setTitle(music.title)        // 通知标题
+                    .setArtist(music.singer)      // 通知歌手
+                    .build()
+            )
+            .build()
+        sharedPlayer.setMediaItem(mediaItem)
+        sharedPlayer.prepare()
+        sharedPlayer.playWhenReady = true
+        isPlayingVideo = false
+        setPlayingState(true)
+        setCurrentMusicId(music.songId.toString())
+        startProgressUpdates() // 启动进度更新
     }
 
-    // 暂停播放
-    fun pauseMusic() {
-        if (mediaPlayer.isPlaying) {
-            mediaPlayer.pause()
-            setPlayingState(false)
-        }
-    }
 
-    // 继续播放
-    fun resumeMusic() {
-        if (!mediaPlayer.isPlaying && isMediaPrepared) {
-            mediaPlayer.start()
-            setPlayingState(true)
-        }
-    }
 
     // 根据百分比跳转进度（适配SmartSeekBar的0-100进度，统一调用新的seekTo）
     fun seekToPercent(percent: Int) {
-        Log.w("isMediaPrepared", "fun seekToPercent(position: Long)   isPlayingVideo 是 $isPlayingVideo  isMediaPrepared $isMediaPrepared")
-
-        if (isPlayingVideo) {
-            // 视频按百分比跳转
-            if (::sharedPlayer.isInitialized) {
-                val duration = sharedPlayer.duration
-                val targetPosition = (percent * duration / 100f).toLong()
-                seekTo(targetPosition) // 调用统一方法
-            }
-        } else {
-            // 音乐按百分比跳转：删除对播放状态的检查（允许暂停时跳转）
-            // 原问题点：_isPlaying.value?.let { if (!it) return }
-//            val targetMillis = percentToMillis(percent)
-//            seekTo(targetMillis.toLong()) // 调用统一方法
-            // 获取当前缓冲百分比
-            val bufferedPercent = _bufferProgress.value ?: 0
-            Log.w(TAG, "缓冲区域bufferedPercent: $bufferedPercent%   percent 是$percent")
-            // 只允许跳转到已缓冲的区域，可能限制暂停音乐没法调整
-            if (percent <= bufferedPercent) {
-                val duration = mediaPlayer.duration
-                val targetPosition = (percent * duration / 100f).toLong()
-                Log.w(TAG, "targetPosition: $targetPosition%   percent 是$percent")
-
-                seekTo(targetPosition)
-            } else {
-                Log.w(TAG, "无法跳转到未缓冲区域: $percent% > $bufferedPercent%")
-                // 可以在这里给用户提示，或自动跳转到最近的缓冲位置
-            }
+        // 视频按百分比跳转
+        if (::sharedPlayer.isInitialized) {
+            val duration = sharedPlayer.duration
+            val targetPosition = (percent * duration / 100f).toLong()
+            seekTo(targetPosition) // 调用统一方法
         }
     }
 
@@ -209,37 +175,22 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
      * @param position 目标进度（毫秒，Long类型兼容大时长视频）
      */
     fun seekTo(position: Long) {
-        Log.w("isMediaPrepared", "fun seekTo(position: Long)   isPlayingVideo 是 $isPlayingVideo  isMediaPrepared $isMediaPrepared")
 
-        if (isPlayingVideo) {
-            // 视频进度跳转（使用ExoPlayer）
-            if (::sharedPlayer.isInitialized&&
-                sharedPlayer.playbackState != Player.STATE_IDLE &&
-                sharedPlayer.duration >= 0) {
-                // 确保进度在有效范围内（0 <= position <= 总时长）
-                val validPosition = position.coerceIn(0, sharedPlayer.duration)
-                sharedPlayer.seekTo(validPosition)
-                Log.d("SeekTo", "视频跳转至: $validPosition 毫秒")
-            }
-        } else {
-            // 音乐进度跳转（使用MediaPlayer）
-            if (isMediaPrepared) {
-                // 转换为Int（音乐时长通常不超过Int范围，超出则取最大值）
-                val validPosition = position.coerceIn(0, mediaPlayer.duration.toLong())
-                mediaPlayer.seekTo(validPosition.toInt())
-               Log.d("SeekTo", "音乐跳转至: $validPosition 毫秒")
-            } else {
-                //不跳转
-                Log.w("SeekTo", "音乐播放器未准备完成，无法跳转")
-            }
-            Log.w("isMediaPrepared", "isMediaPrepared 是 $isMediaPrepared ")
-
+        // 视频进度跳转（使用ExoPlayer）
+        if (::sharedPlayer.isInitialized&&
+            sharedPlayer.playbackState != Player.STATE_IDLE &&
+            sharedPlayer.duration >= 0) {
+            // 确保进度在有效范围内（0 <= position <= 总时长）
+            val validPosition = position.coerceIn(0, sharedPlayer.duration)
+            sharedPlayer.seekTo(validPosition)
+            Log.d("SeekTo", "视频跳转至: $validPosition 毫秒")
         }
+
     }
     private val _playNextEvent = MutableLiveData<Int?>()
     val playNextEvent: LiveData<Int?> = _playNextEvent
     // 播放下一首（完善逻辑）
-    private fun playNextSong() {
+    internal fun playNextSong() {
         val currentList = _playlist.value ?: return
         val currentId = _currentMusicId.value ?: return
 
@@ -257,6 +208,27 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
         // 4. 通知Fragment滚动到下一首的位置（触发自动翻页）--自动播放
         _scrollToPosition.value = nextIndex
     }
+    // 播放上一首
+    internal fun playLastSong() {
+        val currentList = _playlist.value ?: return
+        val currentId = _currentMusicId.value ?: return
+
+        // 1. 计算当前歌曲位置
+        val currentIndex = currentList.indexOfFirst { it.songId.toString() == currentId }
+//        if (currentIndex == -1) return // 未找到当前歌曲，直接返回
+
+        // 2. 计算下一首位置（循环播放：最后一首的下一首是第一首）
+        val nextIndex = (currentIndex.toInt() - 1+currentList.size) % currentList.size
+        val nextMusic = currentList[nextIndex]
+
+        // 3. 更新当前播放ID并播放下一首
+        setCurrentMusicId(nextMusic.songId.toString())
+
+        // 4. 通知Fragment滚动到下一首的位置（触发自动翻页）--自动播放
+        _scrollToPosition.value = nextIndex
+    }
+
+
     // 清除滚动指令（避免重复触发）
     fun clearScrollCommand() {
         _scrollToPosition.value = null
@@ -284,7 +256,24 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({ resp ->
                 if (resp.code == 200) {
-                    _playlist.value = resp.content
+                    val newList = resp.content
+                    // 遍历歌单，为音频生成封面（视频后续预加载）
+                    val processedList = newList.map { music ->
+                        if (!music.isVideo) {
+                            // 音频：生成随机封面资源ID并保存
+                            val randomIndex = (0..22).random() // 与适配器中一致的随机逻辑
+                            val resName = "img$randomIndex"
+                            val context = getApplication<Application>().applicationContext
+                            val resId = context.resources.getIdentifier(
+                                resName, "mipmap", context.packageName
+                            ).takeIf { it != 0 } ?: R.mipmap.img0
+                            music.copy(coverResId = resId) // 保存封面资源ID
+                        } else {
+                            // 视频：初始封面为null，后续预加载
+                            music.copy(coverBitmap = null, isCoverLoaded = false)
+                        }
+                    }
+                    _playlist.value = processedList // 更新歌单
                 } else {
                     Log.e(TAG, "setPlayListDefault: server returned code=${resp.code}, message=${resp.message}")
                 }
@@ -322,7 +311,7 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
                 override fun onPlayerError(error: PlaybackException) {
                     Log.e("PlayError", "视频播放错误: ${error.message}", error)
                     // 错误时不切歌，可暂停播放
-                    pauseVideo()
+                    pauseMusicOrVideo()
                 }
             })
         }
@@ -333,30 +322,20 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
         _isPlaying.value = !currentState // 切换状态
 
         if (currentState) {
-            // 当前是播放状态 → 暂停
-            if (isPlayingVideo) {
-                pauseVideo() // 暂停视频
-            } else {
-                pauseMusic() // 暂停音乐
-            }
+           pauseMusicOrVideo() // 暂停音乐
         } else {
             // 当前是暂停状态 → 继续播放
-            if (isPlayingVideo) {
-                resumeVideo() // 继续视频
-            } else {
-                resumeMusic() // 继续音乐
-            }
+           resumeMusicOrVideo() // 继续音乐
         }
     }
 
-
-    // 继续播放视频
-    fun resumeVideo() {
+    fun resumeMusicOrVideo() {
         if (::sharedPlayer.isInitialized && !sharedPlayer.isPlaying) {
             sharedPlayer.play()
             _isPlaying.value = true
         }
     }
+
 
     // 视频开始播放时调用（在Adapter或Fragment播放视频时调用）
     fun startVideoPlayback() {
@@ -369,7 +348,9 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
         val ip = BuildConfig.SERVER_IP
         return "http://$ip:8000/video/$songId.mp4"
     }
-    fun pauseVideo() {
+
+
+    fun pauseMusicOrVideo() {
         if (::sharedPlayer.isInitialized && sharedPlayer.isPlaying) {
             sharedPlayer.pause() // 暂停而非停止，保留播放进度
             _isPlaying.value = false
@@ -384,11 +365,10 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
     fun startProgressUpdates() {
         // 关键：停止旧任务，避免重复发送
         stopProgressUpdates()
-        Log.d("startProgressUpdates", "isPlayingVideo: $isPlayingVideo,mediaPlayer.isPlaying: $mediaPlayer.isPlaying")
 
         progressRunnable = object : Runnable {
             override fun run() {
-                if (isPlayingVideo && ::sharedPlayer.isInitialized) {
+                if (::sharedPlayer.isInitialized) {
                     // 视频进度
                     val currentPos = sharedPlayer.currentPosition
                     val duration = sharedPlayer.duration
@@ -398,11 +378,6 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
                     } else {
                         Log.d("ProgressUpdate", "视频时长无效: $duration，跳过更新")
                     }
-                } else if (!isPlayingVideo) {
-                    // 音频进度
-                    val currentPos = mediaPlayer.currentPosition.toLong()
-                    val duration = mediaPlayer.duration.toLong()
-                    progressLiveData.postValue(Pair(currentPos, duration))
                 }
                 // 仅在播放状态下继续更新--删除&& mediaPlayer.isPlaying 让暂停状态也能更新进度
                 progressHandler.postDelayed(this, 1000)
@@ -421,8 +396,8 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
     // 一个统一的方法来切换播放类型
     fun switchToVideoPlayback() {
         // 停止当前所有播放
-        if (mediaPlayer.isPlaying) {
-            mediaPlayer.pause()
+        if (sharedPlayer.isPlaying) {
+            sharedPlayer.pause()
         }
 
         // 重置视频播放器状态
@@ -497,6 +472,17 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
+    // 新增：更新播放列表中指定歌曲的信息（如点赞状态）
+    fun updateMusicInfo(updatedMusic: MusicInfo) {
+        val currentList = _playlist.value?.toMutableList() ?: return
+        val index = currentList.indexOfFirst { it.songId == updatedMusic.songId }
+        if (index != -1) {
+            currentList[index] = updatedMusic
+            _playlist.value = currentList  // 触发 LiveData 通知
+        }
+    }
+
 
 
 }
+

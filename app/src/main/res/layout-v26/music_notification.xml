@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/layoutNotification"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    >
+
+    <!-- 顶部：专辑封面 + 歌曲信息 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="90dp"
+        android:orientation="horizontal">
+
+        <!-- 专辑封面 -->
+        <ImageView
+            android:id="@+id/imageviewNotification"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:src="@mipmap/img7"
+            android:background="@drawable/view_style_corners"
+            android:scaleType="centerCrop" />
+
+        <!-- 右侧：歌曲信息区域（垂直排列） -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginLeft="10dp"
+            android:orientation="vertical">
+
+            <!-- 歌名 + 播放按钮（水平排列） -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <!-- 歌名（跑马灯） -->
+                <TextView
+                    android:id="@+id/SongNameNotification"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="长歌名自动滚动显示"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    android:singleLine="true"
+                    android:ellipsize="marquee"
+                    android:textStyle="bold"
+                    android:marqueeRepeatLimit="marquee_forever"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true" />
+
+                <ImageView
+                    android:id="@+id/ImageViewNotificationIcon"
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
+                    android:src="@mipmap/notificationmusic" />
+            </LinearLayout>
+
+            <!-- 歌手名（跑马灯） -->
+            <TextView
+                android:id="@+id/SongSingerNotification"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="长歌手自动滚动显示"
+                android:textColor="@color/grey"
+                android:textSize="13sp"
+                android:singleLine="true"
+                android:ellipsize="marquee"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:layout_marginTop="4dp" />
+
+            <!-- 进度条区域（水平排列） -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
+
+                <!-- 当前时间 -->
+                <TextView
+                    android:id="@+id/tvCurrentTimeNotification"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="02:03"
+                    android:textSize="12sp"
+                    android:textColor="@color/grey" />
+
+                <!-- 进度条 -->
+                <ProgressBar
+                    android:id="@+id/ssbNotification"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginTop="1dp"
+                    android:paddingHorizontal="5dp"
+                    android:progress="50"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_marginHorizontal="5dp"
+                    android:progressTint="@color/blue"/>
+
+                <!-- 总时间 -->
+                <TextView
+                    android:id="@+id/totalTimeNotification"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="05:03"
+                    android:textSize="12sp"
+                    android:textColor="@color/grey" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- 底部：控制按钮（水平排列） -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="35dp"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="8dp">
+
+        <!-- 点赞按钮 -->
+        <ImageView
+            android:id="@+id/lottieNotification"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="30dp"
+            android:src="@mipmap/notificationlike"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <!-- 上一首 -->
+        <ImageView
+            android:id="@+id/ImageViewNotificationLast"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="28dp"
+            android:src="@mipmap/notificationlast" />
+
+        <!-- 播放/暂停 -->
+        <ImageView
+            android:id="@+id/ImageViewNotificationStart"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="35dp"
+            android:src="@mipmap/notificationstart" />
+
+        <!-- 下一首 -->
+        <ImageView
+            android:id="@+id/ImageViewNotificationNext"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="28dp"
+            android:src="@mipmap/notificationnext" />
+
+        <!-- 歌词按钮 -->
+        <TextView
+            android:id="@+id/TextViewNotificationMode"
+            android:layout_width="0dp"
+            android:layout_weight="0.7"
+            android:layout_height="30dp"
+            android:text="词"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            android:textSize="20sp"
+            android:gravity="center" />
+    </LinearLayout>
+</LinearLayout>

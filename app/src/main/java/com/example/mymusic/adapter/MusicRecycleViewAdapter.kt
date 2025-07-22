@@ -2,6 +2,8 @@ package com.example.mymusic.adapter
 
 import android.animation.Animator
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -11,6 +13,7 @@ import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
+import androidx.media3.datasource.DataSource
 import androidx.media3.ui.PlayerView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -19,6 +22,8 @@ import com.airbnb.lottie.LottieAnimationView
 import com.airbnb.lottie.LottieComposition
 import com.airbnb.lottie.LottieCompositionFactory
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
 import com.example.mymusic.R
 import com.example.mymusic.repo.entity.MusicInfo
 import com.example.mymusic.view.AutoScrollTextView
@@ -214,13 +219,6 @@ class MusicRecycleViewAdapter(
         // 保存动画的 composition（用于获取时长）
         private var heartComposition: LottieComposition? = null
 
-        fun setRandomSongImage() {
-            val randomIndex = (0..22).random()
-            val resName = "img$randomIndex"
-            val resId = itemView.context.resources.getIdentifier(resName, "mipmap", itemView.context.packageName)
-            if (resId != 0) ivSongImage.setImageResource(resId)
-            else ivSongImage.setImageResource(R.mipmap.img0)
-        }
 
         fun bind(musicInfo: MusicInfo) {
             tvTitle.text = musicInfo.title
@@ -287,7 +285,16 @@ class MusicRecycleViewAdapter(
 
 
             // 设置随机图片
-            setRandomSongImage()
+                val randomIndex = (0..22).random()
+                val resName = "img$randomIndex"
+                val resId = itemView.context.resources.getIdentifier(resName, "mipmap", itemView.context.packageName)
+                if (resId != 0) {
+                    ivSongImage.setImageResource(resId)
+                    musicInfo.coverResId = resId // 保存资源ID
+                } else {
+                    ivSongImage.setImageResource(R.mipmap.img0)
+                    musicInfo.coverResId = R.mipmap.img0
+                }
 
             // 使用通用方法设置关注按钮
             setupFollowButton(tvFollow, musicInfo, adapterPosition, onItemActionListener)
@@ -527,14 +534,51 @@ class MusicRecycleViewAdapter(
             val videoUrl = viewModel.getVideoUrlBySongId(musicInfo.songId)
 
             // 重置播放器状态
-            if(!isCurrent){
-                // 加载视频封面
+//            if (!isCurrent) {
+                // 加载视频封面（第一帧）
                 Glide.with(itemView.context)
                     .asBitmap()
                     .load(videoUrl)
-                    .frame(0) // 加载第0毫秒的帧作为封面图
+                    .frame(0) // 取第0毫秒帧
+                    .listener(object : RequestListener<Bitmap> {
+                        override fun onLoadFailed(
+                            e: GlideException?,
+                            model: Any?,
+                            target: com.bumptech.glide.request.target.Target<Bitmap?>?,
+                            isFirstResource: Boolean
+                        ): Boolean {
+                            // 加载失败：设置默认封面
+                            val defaultCover = BitmapFactory.decodeResource(
+                                itemView.context.resources,
+                                R.mipmap.img2 // 默认封面资源
+                            )
+                            musicInfo.coverBitmap = defaultCover
+                            musicInfo.isCoverLoaded = true // 标记封面已加载
+                            viewModel.updateMusicInfo(musicInfo)
+                            thumbnailImageView.setImageBitmap(defaultCover)
+                            return false
+                        }
+
+                        override fun onResourceReady(
+                            resource: Bitmap?,
+                            model: Any?,
+                            target: com.bumptech.glide.request.target.Target<Bitmap?>?,
+                            dataSource: com.bumptech.glide.load.DataSource?,
+                            isFirstResource: Boolean
+                        ): Boolean {
+                            // 1. 保存封面到 MusicInfo
+                            musicInfo.coverBitmap = resource
+                            musicInfo.isCoverLoaded = true // 标记封面已加载
+                            Log.d("MyMusic", "视频封面加载成功${musicInfo.songId}      ${musicInfo.lyricist}")
+                            // 2. 通知 ViewModel 更新数据（触发 LiveData 通知）
+                            viewModel.updateMusicInfo(musicInfo)
+                            // 3. 设置封面到 ImageView
+                            thumbnailImageView.setImageBitmap(resource)
+                            return false // 允许 Glide 继续设置图片到 target
+                        }
+                    })
                     .into(thumbnailImageView)
-            }
+//            }
 
             if (isCurrent) {
                 // 当前页：显示播放器
