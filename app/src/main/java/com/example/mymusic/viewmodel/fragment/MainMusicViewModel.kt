@@ -1,16 +1,12 @@
 package com.example.mymusic.viewmodel.fragment
 
-import android.app.Application
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
-import android.media.AudioManager
-import android.media.MediaPlayer
-import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.View
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.media3.common.MediaItem
@@ -20,27 +16,48 @@ import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mymusic.BuildConfig
-import com.example.mymusic.R
 import com.example.mymusic.adapter.MusicRecycleViewAdapter
 import com.example.mymusic.repo.entity.MusicInfo
+import com.example.mymusic.repo.playlist.PlaylistChangeListener
+import com.example.mymusic.repo.playlist.PlaylistRepository
 import com.example.mymusic.repo.remote.ApiService
 import com.example.mymusic.repo.remote.RetrofitConnection
+import com.example.mymusic.viewmodel.BaseViewModel
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import java.util.concurrent.TimeUnit
 
-class MainMusicViewModel(application: Application) : AndroidViewModel(application) {
+class MainMusicViewModel : BaseViewModel() {
 
     private val apiService: ApiService = RetrofitConnection.apiService
 
     companion object {
         private const val TAG = "MyMusic"
+        internal var isUpdatingSingleSong = false
+        internal var isUpdatingByNotification = false
+
     }
+
+    // 标记是否正在更新单首歌曲信息
+    var mPlaylistRepository: PlaylistRepository = PlaylistRepository
 
     private val disposables = CompositeDisposable()
     private val _playlist = MutableLiveData<List<MusicInfo>>(emptyList())
     val playlist: LiveData<List<MusicInfo>> = _playlist
+    private val playlistListener = object : PlaylistChangeListener {
+        override fun onPlaylistChanged(newPlaylist: List<MusicInfo>) {
+            Log.d("MainMusicViewModel", "旧歌单: ${_playlist.value}")
+            Log.d("MainMusicViewModel", "新歌单: $newPlaylist")
+            _playlist.value = newPlaylist
+            Log.d("MainMusicViewModel", "收到新的歌单: ${newPlaylist.size} 首")
+        }
+    }
+
+    init {
+        // 仅注册一次
+        PlaylistRepository.addListener(playlistListener)
+    }
 
     // 当前选中的音乐id（使用LiveData便于UI观察变化）
     private val _currentMusicId = MutableLiveData<String?>(null)
@@ -261,19 +278,20 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
                     val processedList = newList.map { music ->
                         if (!music.isVideo) {
                             // 音频：生成随机封面资源ID并保存
-                            val randomIndex = (0..22).random() // 与适配器中一致的随机逻辑
-                            val resName = "img$randomIndex"
-                            val context = getApplication<Application>().applicationContext
-                            val resId = context.resources.getIdentifier(
-                                resName, "mipmap", context.packageName
-                            ).takeIf { it != 0 } ?: R.mipmap.img0
-                            music.copy(coverResId = resId) // 保存封面资源ID
+//                            val randomIndex = (0..22).random() // 与适配器中一致的随机逻辑
+//                            val resName = "img$randomIndex"
+//                            val context = getApplication<Application>().applicationContext
+//                            val resId = context.resources.getIdentifier(
+//                                resName, "mipmap", context.packageName
+//                            ).takeIf { it != 0 } ?: R.mipmap.img0
+//                            music.copy(coverResId = resId) // 保存封面资源ID
                         } else {
                             // 视频：初始封面为null，后续预加载
                             music.copy(coverBitmap = null, isCoverLoaded = false)
                         }
                     }
-                    _playlist.value = processedList // 更新歌单
+                    _playlist.value = newList // 更新歌单
+                    PlaylistRepository.mPlaylist= newList as MutableList<MusicInfo>// 更新仓库
                 } else {
                     Log.e(TAG, "setPlayListDefault: server returned code=${resp.code}, message=${resp.message}")
                 }
@@ -470,15 +488,24 @@ class MainMusicViewModel(application: Application) : AndroidViewModel(applicatio
         if (::sharedPlayer.isInitialized) {
             sharedPlayer.release()
         }
+        PlaylistRepository.removeListener(@SuppressLint("ImplicitSamInstance")
+        object : PlaylistChangeListener {
+            override fun onPlaylistChanged(newPlaylist: List<MusicInfo>) {
+                // 空实现，仅用于移除
+            }
+        })
+
     }
 
     // 新增：更新播放列表中指定歌曲的信息（如点赞状态）
     fun updateMusicInfo(updatedMusic: MusicInfo) {
+        isUpdatingSingleSong=true
         val currentList = _playlist.value?.toMutableList() ?: return
         val index = currentList.indexOfFirst { it.songId == updatedMusic.songId }
         if (index != -1) {
             currentList[index] = updatedMusic
             _playlist.value = currentList  // 触发 LiveData 通知
+            mPlaylistRepository.updateMusicInfo(updatedMusic)
         }
     }
 

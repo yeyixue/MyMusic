@@ -30,6 +30,7 @@ import com.example.mymusic.repo.entity.MusicInfo
 import com.example.mymusic.view.activity.MyMusicActivity
 import com.example.mymusic.viewmodel.fragment.MainMusicViewModel
 import androidx.core.graphics.createBitmap
+import com.example.mymusic.viewmodel.fragment.MainMusicViewModel.Companion.isUpdatingSingleSong
 
 @UnstableApi
 class NotificationService : Service() {
@@ -281,6 +282,8 @@ class NotificationService : Service() {
             mMainMusicViewModel?.updateMusicInfo(updatedMusic)
             currentMusic = updatedMusic
             updateNotification() // 刷新通知
+            MainMusicViewModel.isUpdatingSingleSong=true
+            MainMusicViewModel.isUpdatingByNotification =true
         }
     }
 

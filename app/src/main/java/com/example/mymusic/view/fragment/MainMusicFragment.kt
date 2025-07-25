@@ -55,6 +55,8 @@ class MainMusicFragment : BaseMusicFragment() {
             return MainMusicFragment()
         }
     }
+    // 标记是否是更新单首歌曲信息
+
     private lateinit var mMusicRecycleViewAdapter: MusicRecycleViewAdapter
     private lateinit var mRecyclerView: RecyclerView
     /*
@@ -121,17 +123,23 @@ class MainMusicFragment : BaseMusicFragment() {
         }
     }
 
+    /**
+     * 此处应该设置PlaylistRepository.kt的回调函数，基于歌单变化还是某一首音乐信息变化来处理，
+     * bug
+     */
 
     private fun setupMusicList() {
-        var isFirstLoad = true // 首次加载标记
+
         // 监听歌单数据变化（首次加载/更新时触发）
         mMainMusicViewModel.playlist.observe(viewLifecycleOwner) { newList ->
             if (newList.isNotEmpty()) {
                 musicList = newList
                 mMusicRecycleViewAdapter.infoList = newList // 只更新适配器，不重新播放
+                Log.d("MainMusicFragment", "只更新适配器，不重新播放 ")
 
-                // 仅在首次加载时执行播放初始化
-                if (isFirstLoad) {
+                // 加载整个歌单，修改单首歌不用加载
+                if (!MainMusicViewModel.isUpdatingSingleSong) {
+                    Log.d("MainMusicFragment", "加载整个歌单，修改单首歌不用加载 ")
 
                     mRecyclerView.post {
                         mRecyclerView.scrollToPosition(0)
@@ -151,13 +159,14 @@ class MainMusicFragment : BaseMusicFragment() {
                                 currentCenterPosition
                             )
                         }
-                        isFirstLoad = false // 首次加载完成，标记为 false
+                        MainMusicViewModel.isUpdatingSingleSong = false // 首次加载完成，标记为 false
                     }
                     val videoList = newList.filter { it.isVideo }
                     videoList.take(3).forEach { videoMusic -> // 预加载前3个视频
                         preloadVideoCover(videoMusic)
                     }
                 }
+
             }
         }
 
@@ -405,6 +414,7 @@ class MainMusicFragment : BaseMusicFragment() {
     override fun onDestroy() {
         super.onDestroy()
         // 解绑服务
+        Log.d("MainMusicFragment", "解绑服务")
         requireContext().unbindService(serviceConnection)
     }
 

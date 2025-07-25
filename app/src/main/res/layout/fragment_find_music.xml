@@ -34,8 +34,8 @@
                 android:hint="搜索歌手、歌曲或专辑名"
                 android:paddingLeft="10dp"
                 android:paddingRight="10dp"
-                android:textColorHint="#616161"
-
+                android:textColorHint="#F4EFEF"
+                android:textColor="#F4EFEF"
                 android:textSize="15sp" />
 
             <TextView
@@ -46,7 +46,7 @@
                 android:background="#282828"
                 android:gravity="center"
                 android:text="搜索"
-                android:textColor="#616161"
+                android:textColor="#9B9A9A"
                 android:textSize="14sp" />
         </RelativeLayout>
     </androidx.cardview.widget.CardView>
